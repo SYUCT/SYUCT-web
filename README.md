@@ -74,7 +74,7 @@
 - 首页校园实景预览可一键跳转到完整校园相册
 - 首页可显示 GitHub 项目 Star / Fork；网页只读取 `assets/github-stats.json`，统计由 GitHub Actions 定时更新
 - 校园社区为 GitHub Discussions 的只读镜像，发帖与回复仍在 GitHub 完成
-- 化大课表转换全部在浏览器本地完成，课表内容不会上传服务器
+- 化大课表转换支持原始文本粘贴和课表截图 OCR，两条流程均在浏览器本地完成，课表内容和图片不会上传服务器
 - 图片按显示尺寸提供 WebP 版本，原图保留用于高清查看；站点图标按用途拆分尺寸
 
 ## 项目结构
@@ -92,6 +92,7 @@ SYUCT-web/
 │   ├── icons/                         # 全站导航与入口 SVG 图标
 │   ├── optimized/                     # 网页显示用 WebP（原图仍保留）
 │   ├── pdfjs/                         # GitHub Actions 写入的 PDF.js 运行文件
+│   ├── tesseract/                     # 截图 OCR 的本地 Tesseract.js、WASM 核心与中文模型
 │   ├── community-media/               # 社区讨论正文图片的本地缓存
 │   ├── office-preview-manifest.json   # Office 原文件与预览 PDF 映射
 │   ├── github-stats.json              # GitHub Star / Fork 静态统计
@@ -158,6 +159,18 @@ SYUCT-web/
 `rev` 只用于缓存失效，不代表必须创建新文件。不要重新增加 `app-v129.js`、`styles-v129.css` 这类历史副本。
 
 修改 `styles.css` 或 `app.js` 后，需要把**所有**页面引用的 `rev` 一起更新；否则拿到旧缓存的浏览器可能引用到已经改名或删除的资源。
+
+## 课表截图 OCR
+
+`timetable-converter.html` 保留原有“粘贴课表文本”入口，并增加按需加载的截图识别入口：
+
+1. Canvas 在本地缩放图片、灰度化与二值化，并检测 8 条等距星期竖线；
+2. 从左侧节次列检测第 1-10 节的 11 条横线，按两节一组建立固定课表网格；
+3. 只把含文字的课程格交给本地 Tesseract.js 中文模型；
+4. 根据 OCR 文字坐标和网格位置生成现有课程对象，再复用 `timetable-codec.js` 生成 `SYUCT-TT2`；
+5. OCR 结果以可编辑课程卡展示，必须由用户确认后才能生成课表码。
+
+首次识别会从本站按需下载约 6 MB 的 OCR 核心与中文模型，浏览器随后会缓存模型。当前版本只接受完整、正向、未裁掉星期日与第 10 节的正方教务系统课表截图；倾斜照片、缺列截图和严重压缩图片会被拒绝或要求人工修正。
 
 ## 校园社区镜像
 
@@ -232,7 +245,7 @@ Word、Excel 原文件上传到 `docs/` 后，`Build local Office previews` 工�
 目录：/ (root)
 ```
 
-网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js；Office 预览由独立 GitHub Actions 工作流生成。
+网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。OCR 运行文件已提交到 `assets/tesseract/v7.0.0/`，部署时必须保留该目录。
 
 ## 资料来源与版权
 

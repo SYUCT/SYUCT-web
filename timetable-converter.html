@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="沈阳化工大学校园网页课表本地转换工具：复制完整课表，在浏览器本地识别并生成 SYUCT-TT2 课表码供 SYUCT-mini 导入。">
+  <meta name="description" content="沈阳化工大学校园网页课表本地转换工具：粘贴完整课表或上传课表截图，在浏览器本地识别并生成 SYUCT-TT2 课表码供 SYUCT-mini 导入。">
   <meta name="theme-color" content="#075ca8">
   <title>化大课表转换 · 沈阳化工大学校园指南（学生共创版）</title>
   <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-  <link href="assets/timetable-converter.css?rev=20260821" rel="stylesheet">
+  <link href="assets/timetable-converter.css?rev=20260831-ocr1" rel="stylesheet">
   <link href="assets/favicon-32.png" rel="icon" type="image/png" sizes="32x32">
   <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 </head>
@@ -41,10 +41,10 @@
         <header class="article-header tt-hero">
           <div class="breadcrumb">首页 / 办事大厅 / 化大课表转换</div>
           <h1>化大课表转换</h1>
-          <p>在电脑上把教务处课表整页复制过来，本页离线识别后生成 <strong>SYUCT-TT2</strong> 课表码，发到手机即可在小程序导入。</p>
+          <p>可以粘贴电脑端教务处完整课表，也可以上传课表截图。本页在浏览器本地识别后生成 <strong>SYUCT-TT2</strong> 课表码，发到手机即可在小程序导入。</p>
           <div class="tt-flow" aria-label="课表转换流程">
-            <div class="tt-flow-step"><b>1</b><span>电脑端教务处复制完整课表</span></div>
-            <div class="tt-flow-step"><b>2</b><span>粘贴到本页并识别</span></div>
+            <div class="tt-flow-step"><b>1</b><span>复制完整课表，或准备原始截图</span></div>
+            <div class="tt-flow-step"><b>2</b><span>粘贴或上传到本页识别</span></div>
             <div class="tt-flow-step"><b>3</b><span>生成并复制课表码</span></div>
             <div class="tt-flow-step"><b>4</b><span>发到微信，在小程序导入</span></div>
           </div>
@@ -58,19 +58,47 @@
               <a class="tt-button tt-button-secondary" href="docs/timetable-converter-guide.pdf" download>下载 PDF</a>
             </div>
           </div>
-          <div class="tt-privacy"><strong>隐私说明：</strong>课表转换全部在浏览器本地完成，课程、教师、教室等信息不会上传。公益项目没租服务器，偷不了你信息</div>
+          <div class="tt-privacy"><strong>隐私说明：</strong>文字解析、图片预处理和 OCR 全部在浏览器本地完成，课表图片及课程、教师、教室等信息不会上传。首次使用截图识别时，浏览器会从本站下载约 6 MB 的 OCR 核心和中文模型。</div>
         </header>
 
         <section class="tt-section" id="recognize">
           <div class="tt-section-head">
-            <h2>1. 粘贴并识别课表</h2>
-            <p>必须在电脑端教务处原页面复制，从左上角「时间」拖选到页面右下角。经微信、QQ 转发后会丢失格式，导致星期错位。</p>
+            <h2>1. 导入并识别课表</h2>
+            <p>文本粘贴最准确；截图 OCR 是第一版测试功能，识别后必须逐条核对。</p>
           </div>
-          <label class="tt-label" for="rawTimetable">教务处课表复制内容</label>
-          <textarea id="rawTimetable" class="tt-textarea" spellcheck="false" autocomplete="off" placeholder="在这里粘贴从校园网页复制的完整课表……"></textarea>
-          <div class="tt-actions">
-            <button class="tt-button tt-button-primary" id="recognizeBtn" type="button">识别课表</button>
+
+          <div class="tt-source-tabs" role="tablist" aria-label="课表导入方式">
+            <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="true" aria-controls="textSourcePanel">粘贴课表文本（推荐）</button>
+            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="false" aria-controls="imageSourcePanel">上传课表截图（测试版）</button>
           </div>
+
+          <div id="textSourcePanel" role="tabpanel" aria-labelledby="textSourceTab">
+            <p class="tt-source-help">必须在电脑端教务处原页面复制，从左上角「时间」拖选到页面右下角。经微信、QQ 转发后会丢失格式，导致星期错位。</p>
+            <label class="tt-label" for="rawTimetable">教务处课表复制内容</label>
+            <textarea id="rawTimetable" class="tt-textarea" spellcheck="false" autocomplete="off" placeholder="在这里粘贴从校园网页复制的完整课表……"></textarea>
+            <div class="tt-actions">
+              <button class="tt-button tt-button-primary" id="recognizeBtn" type="button">识别课表</button>
+            </div>
+          </div>
+
+          <div id="imageSourcePanel" role="tabpanel" aria-labelledby="imageSourceTab" hidden>
+            <div class="tt-ocr-guide">
+              <strong>截图需要完整保留课表网格</strong>
+              <span>支持正方教务系统这类“星期一至星期日 + 第1节至第10节”的正向截图。优先上传手机原图，不要裁掉表头和左右边框，也不要拍摄倾斜的屏幕照片。</span>
+            </div>
+            <label class="tt-label" for="ocrImageInput">课表截图</label>
+            <input id="ocrImageInput" class="tt-file-input" type="file" accept="image/png,image/jpeg,image/webp">
+            <p class="tt-file-meta" id="ocrFileMeta">支持 PNG、JPG、WebP，最大 20 MB。</p>
+            <canvas class="tt-ocr-canvas" id="ocrCanvas" hidden aria-label="课表截图与自动定位的网格预览"></canvas>
+            <div class="tt-ocr-progress" id="ocrProgressBox" hidden>
+              <div><strong id="ocrProgressLabel">正在准备 OCR</strong><span id="ocrProgressValue">0%</span></div>
+              <progress id="ocrProgress" max="1" value="0">0%</progress>
+            </div>
+            <div class="tt-actions">
+              <button class="tt-button tt-button-primary" id="ocrRecognizeBtn" type="button" disabled>识别课表截图</button>
+            </div>
+          </div>
+
           <div class="tt-status" id="recognizeStatus" hidden aria-live="polite">
             <strong id="recognizeStatusTitle"></strong>
             <p id="recognizeStatusMessage"></p>
@@ -84,8 +112,17 @@
               <div class="tt-summary-card"><strong id="evenCount">0</strong><span>个双周安排</span></div>
             </div>
             <div class="tt-practice-notice" id="practiceNotice" hidden></div>
+            <div class="tt-ocr-review" id="ocrReviewPanel" hidden>
+              <strong>OCR 结果是可修改的初稿</strong>
+              <p>请对照上方原图逐条修改课程名、教师、教室、星期、节次和周次。黄色卡片包含机器无法可靠判断的字段。</p>
+              <label><input id="ocrReviewConfirm" type="checkbox"> 我已逐条核对并修正下方所有课程</label>
+            </div>
             <h3 class="tt-preview-title">课程预览</h3>
             <div class="tt-preview" id="coursePreview"></div>
+            <details class="tt-ocr-raw" id="ocrRawDetails" hidden>
+              <summary>查看 OCR 分格原文（排查漏识别时使用）</summary>
+              <pre id="ocrRawOutput"></pre>
+            </details>
           </div>
         </section>
 
@@ -138,6 +175,7 @@
   <script defer src="assets/app.js?rev=20260821"></script>
   <script defer src="assets/timetable-campus-parser.js?rev=20260818f"></script>
   <script defer src="assets/timetable-codec.js?rev=20260818"></script>
-  <script defer src="assets/timetable-converter.js?rev=20260818f"></script>
+  <script defer src="assets/timetable-ocr.js?rev=20260831-ocr1"></script>
+  <script defer src="assets/timetable-converter.js?rev=20260831-ocr1"></script>
 </body>
 </html>

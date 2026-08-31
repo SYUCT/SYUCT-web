@@ -3,12 +3,25 @@
 
   const parser = window.SYUCTTimetableParser;
   const codec = window.SYUCTTimetableCodec;
+  const ocr = window.SYUCTTimetableOCR;
   if (!parser || !codec) return;
 
   const weekdayNames = ['', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
   const weekTypeNames = { all: '', odd: ' · 单周', even: ' · 双周' };
   const rawInput = document.getElementById('rawTimetable');
   const recognizeBtn = document.getElementById('recognizeBtn');
+  const textSourceTab = document.getElementById('textSourceTab');
+  const imageSourceTab = document.getElementById('imageSourceTab');
+  const textSourcePanel = document.getElementById('textSourcePanel');
+  const imageSourcePanel = document.getElementById('imageSourcePanel');
+  const ocrImageInput = document.getElementById('ocrImageInput');
+  const ocrFileMeta = document.getElementById('ocrFileMeta');
+  const ocrCanvas = document.getElementById('ocrCanvas');
+  const ocrRecognizeBtn = document.getElementById('ocrRecognizeBtn');
+  const ocrProgressBox = document.getElementById('ocrProgressBox');
+  const ocrProgress = document.getElementById('ocrProgress');
+  const ocrProgressLabel = document.getElementById('ocrProgressLabel');
+  const ocrProgressValue = document.getElementById('ocrProgressValue');
   const statusBox = document.getElementById('recognizeStatus');
   const statusTitle = document.getElementById('recognizeStatusTitle');
   const statusMessage = document.getElementById('recognizeStatusMessage');
@@ -18,6 +31,10 @@
   const oddCount = document.getElementById('oddCount');
   const evenCount = document.getElementById('evenCount');
   const practiceNotice = document.getElementById('practiceNotice');
+  const ocrReviewPanel = document.getElementById('ocrReviewPanel');
+  const ocrReviewConfirm = document.getElementById('ocrReviewConfirm');
+  const ocrRawDetails = document.getElementById('ocrRawDetails');
+  const ocrRawOutput = document.getElementById('ocrRawOutput');
   const previewList = document.getElementById('coursePreview');
   const semesterInput = document.getElementById('semester');
   const firstWeekDateInput = document.getElementById('firstWeekDate');
@@ -29,6 +46,9 @@
 
   let parsedResult = null;
   let clipboardHtml = '';
+  let selectedImageFile = null;
+  let sourceMode = 'text';
+  let ocrBusy = false;
 
   function setStatus(kind, title, message) {
     statusBox.hidden = false;
@@ -57,69 +77,212 @@
     previewList.replaceChildren();
     practiceNotice.hidden = true;
     practiceNotice.textContent = '';
+    ocrReviewPanel.hidden = true;
+    ocrReviewConfirm.checked = false;
+    ocrRawDetails.hidden = true;
+    ocrRawDetails.open = false;
+    ocrRawOutput.textContent = '';
     generateBtn.disabled = true;
     resetGeneratedCode();
     clearStatus();
   }
 
-  function renderPreview(courses) {
+  function isOcrResult() {
+    return Boolean(parsedResult && /^image-ocr/.test(parsedResult.meta.sourceFormat || ''));
+  }
+
+  function updateSummary() {
+    if (!parsedResult) return;
+    const courses = parsedResult.courses;
+    const uniqueNames = new Set(courses.map((course) => course.name).filter(Boolean));
+    parsedResult.meta.arrangementCount = courses.length;
+    parsedResult.meta.uniqueCourseCount = uniqueNames.size;
+    parsedResult.meta.oddCount = courses.filter((course) => course.weekType === 'odd').length;
+    parsedResult.meta.evenCount = courses.filter((course) => course.weekType === 'even').length;
+    parsedResult.meta.maxEndWeek = courses.reduce((max, course) => Math.max(max, Number(course.endWeek) || 0), 0);
+    arrangementCount.textContent = String(parsedResult.meta.arrangementCount);
+    uniqueCourseCount.textContent = String(parsedResult.meta.uniqueCourseCount);
+    oddCount.textContent = String(parsedResult.meta.oddCount);
+    evenCount.textContent = String(parsedResult.meta.evenCount);
+  }
+
+  function updateGenerateAvailability() {
+    const structureReady = Boolean(parsedResult && parsedResult.courses.length
+      && parsedResult.meta.sourceLikelyComplete && parsedResult.meta.clipboardStructureValid);
+    const reviewReady = !isOcrResult() || ocrReviewConfirm.checked;
+    generateBtn.disabled = !(structureReady && reviewReady);
+  }
+
+  function renderStaticCourse(item, course) {
+    const name = document.createElement('h3');
+    name.textContent = course.name;
+    item.appendChild(name);
+
+    const when = document.createElement('p');
+    when.className = 'tt-course-when';
+    when.textContent = `${weekdayNames[course.weekday]} · ${course.startSection}-${course.endSection}节 · ${course.startWeek}-${course.endWeek}周${weekTypeNames[course.weekType] || ''}`;
+    item.appendChild(when);
+
+    const detailParts = [course.teacher, course.room].filter(Boolean);
+    if (detailParts.length) {
+      const detail = document.createElement('p');
+      detail.className = 'tt-course-detail';
+      detail.textContent = detailParts.join(' · ');
+      item.appendChild(detail);
+    }
+  }
+
+  function addEditorField(editor, config) {
+    const field = document.createElement('div');
+    field.className = `tt-edit-field ${config.className || ''}`.trim();
+    const label = document.createElement('label');
+    label.textContent = config.label;
+    field.appendChild(label);
+
+    let control;
+    if (config.options) {
+      control = document.createElement('select');
+      config.options.forEach((option) => {
+        const element = document.createElement('option');
+        element.value = String(option.value);
+        element.textContent = option.label;
+        control.appendChild(element);
+      });
+    } else {
+      control = document.createElement('input');
+      control.type = config.type || 'text';
+      if (config.min != null) control.min = String(config.min);
+      if (config.max != null) control.max = String(config.max);
+      if (config.maxLength != null) control.maxLength = config.maxLength;
+    }
+    control.value = String(config.value == null ? '' : config.value);
+    control.setAttribute('aria-label', config.label);
+    control.addEventListener('input', () => config.onChange(control.value));
+    field.appendChild(control);
+    editor.appendChild(field);
+  }
+
+  function handleOcrEdit(course, field, value) {
+    const numericFields = new Set(['weekday', 'startSection', 'endSection', 'startWeek', 'endWeek']);
+    course[field] = numericFields.has(field) ? Number(value) : value;
+    course.ocrEdited = true;
+    ocrReviewConfirm.checked = false;
+    updateSummary();
+    updateGenerateAvailability();
+    resetGeneratedCode();
+  }
+
+  function renderEditableCourse(item, course, index) {
+    const issues = Array.isArray(course.ocrIssues) ? course.ocrIssues : [];
+    item.dataset.ocrWarning = issues.length ? 'true' : 'false';
+    const editor = document.createElement('div');
+    editor.className = 'tt-course-editor';
+    const change = (field) => (value) => handleOcrEdit(course, field, value);
+
+    addEditorField(editor, { label: '课程名称', value: course.name, maxLength: 120, className: 'tt-edit-wide', onChange: change('name') });
+    addEditorField(editor, { label: '教师', value: course.teacher, maxLength: 80, className: 'tt-edit-half', onChange: change('teacher') });
+    addEditorField(editor, { label: '教室', value: course.room, maxLength: 120, className: 'tt-edit-half', onChange: change('room') });
+    addEditorField(editor, {
+      label: '星期', value: course.weekday, className: 'tt-edit-third', onChange: change('weekday'),
+      options: weekdayNames.slice(1).map((label, optionIndex) => ({ value: optionIndex + 1, label }))
+    });
+    addEditorField(editor, { label: '开始节次', value: course.startSection, type: 'number', min: 1, max: 12, className: 'tt-edit-third', onChange: change('startSection') });
+    addEditorField(editor, { label: '结束节次', value: course.endSection, type: 'number', min: 1, max: 12, className: 'tt-edit-third', onChange: change('endSection') });
+    addEditorField(editor, { label: '开始周', value: course.startWeek, type: 'number', min: 1, max: 30, className: 'tt-edit-third', onChange: change('startWeek') });
+    addEditorField(editor, { label: '结束周', value: course.endWeek, type: 'number', min: 1, max: 30, className: 'tt-edit-third', onChange: change('endWeek') });
+    addEditorField(editor, {
+      label: '周次规则', value: course.weekType, className: 'tt-edit-third', onChange: change('weekType'),
+      options: [{ value: 'all', label: '每周' }, { value: 'odd', label: '单周' }, { value: 'even', label: '双周' }]
+    });
+
+    if (issues.length) {
+      const warning = document.createElement('p');
+      warning.className = 'tt-ocr-issues';
+      warning.textContent = `需要核对：${issues.join('；')}`;
+      editor.appendChild(warning);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'tt-course-editor-actions';
+    const confidence = document.createElement('small');
+    confidence.textContent = course.ocrConfidence ? `OCR 置信度约 ${course.ocrConfidence}%` : 'OCR 置信度未知';
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'tt-course-remove';
+    remove.textContent = '删除这条';
+    remove.addEventListener('click', () => {
+      parsedResult.courses.splice(index, 1);
+      parsedResult.courses.forEach((entry, colorIndex) => { entry.colorIndex = colorIndex % 6; });
+      ocrReviewConfirm.checked = false;
+      updateSummary();
+      renderPreview(parsedResult.courses, true);
+      updateGenerateAvailability();
+      resetGeneratedCode();
+    });
+    actions.append(confidence, remove);
+    editor.appendChild(actions);
+    item.appendChild(editor);
+  }
+
+  function renderPreview(courses, editable) {
     previewList.replaceChildren();
-    courses.forEach((course) => {
+    courses.forEach((course, index) => {
       const item = document.createElement('article');
       item.className = 'tt-course-card';
-
-      const name = document.createElement('h3');
-      name.textContent = course.name;
-      item.appendChild(name);
-
-      const when = document.createElement('p');
-      when.className = 'tt-course-when';
-      when.textContent = `${weekdayNames[course.weekday]} · ${course.startSection}-${course.endSection}节 · ${course.startWeek}-${course.endWeek}周${weekTypeNames[course.weekType] || ''}`;
-      item.appendChild(when);
-
-      const detailParts = [course.teacher, course.room].filter(Boolean);
-      if (detailParts.length) {
-        const detail = document.createElement('p');
-        detail.className = 'tt-course-detail';
-        detail.textContent = detailParts.join(' · ');
-        item.appendChild(detail);
-      }
+      if (editable) renderEditableCourse(item, course, index);
+      else renderStaticCourse(item, course);
       previewList.appendChild(item);
     });
   }
 
-  function recognize() {
+  function renderRawOcr(meta) {
+    const cells = Array.isArray(meta.rawCells) ? meta.rawCells : [];
+    ocrRawOutput.textContent = cells.map((cell) => {
+      const heading = `${weekdayNames[cell.weekday]} · 第${cell.startSection}-${cell.startSection + 1}节 · 提取${cell.parsedCount}条`;
+      return `${heading}\n${cell.lines.join('\n') || '（未识别到文字）'}`;
+    }).join('\n\n');
+    ocrRawDetails.hidden = !cells.length;
+  }
+
+  function applyParsedResult(result, editable) {
+    parsedResult = result;
+    updateSummary();
+    renderPreview(result.courses, editable);
+    resultPanel.hidden = false;
+    ocrReviewPanel.hidden = !editable;
+    ocrReviewConfirm.checked = false;
+    if (editable) renderRawOcr(result.meta);
+    else {
+      ocrRawDetails.hidden = true;
+      ocrRawOutput.textContent = '';
+    }
+
+    if (result.meta.practiceNames && result.meta.practiceNames.length) {
+      practiceNotice.hidden = false;
+      practiceNotice.textContent = `检测到无固定星期、节次的实践课：${result.meta.practiceNames.join('、')}。本版只提示，不加入正常周课表。`;
+    } else {
+      practiceNotice.hidden = true;
+      practiceNotice.textContent = '';
+    }
+    updateGenerateAvailability();
+  }
+
+  function recognizeText() {
     resetGeneratedCode();
     try {
       const result = parser.parseCampusTimetable(rawInput.value, { html: clipboardHtml });
-      parsedResult = result;
-      arrangementCount.textContent = String(result.meta.arrangementCount);
-      uniqueCourseCount.textContent = String(result.meta.uniqueCourseCount);
-      oddCount.textContent = String(result.meta.oddCount);
-      evenCount.textContent = String(result.meta.evenCount);
-      renderPreview(result.courses);
-      resultPanel.hidden = false;
-
-      if (result.meta.practiceNames.length) {
-        practiceNotice.hidden = false;
-        practiceNotice.textContent = `检测到无固定星期、节次的实践课：${result.meta.practiceNames.join('、')}。本版只提示，不加入正常周课表。`;
-      } else {
-        practiceNotice.hidden = true;
-      }
+      applyParsedResult(result, false);
 
       if (!result.meta.sourceLikelyComplete) {
-        generateBtn.disabled = true;
         setStatus('warning', '识别结果可能不完整', '没有确认复制到晚间课表末尾。请回到校园网页，选择完整课表后重新复制；为避免漏课，当前不允许生成课表码。');
         return;
       }
 
       if (!result.meta.clipboardStructureValid) {
-        generateBtn.disabled = true;
         setStatus('warning', '星期列未通过校验', '未检测到校园网页原始纯文本的 7 个星期槽结构。请直接从教务处网页复制完整课表后粘贴，不要经过聊天软件或文档转换；当前不允许生成课表码。');
         return;
       }
 
-      generateBtn.disabled = false;
       const structureMessage = result.meta.sourceFormat === 'clipboard-html-structure'
         ? `浏览器剪贴板中的课表表格结构校验通过：已确认周一到周日 ${result.meta.weekdaySlotCount} 列。`
         : `纯文本课表结构校验通过：${result.meta.validatedSectionRows} 个节次行均还原为周一到周日 ${result.meta.weekdaySlotCount} 个星期槽。`;
@@ -130,6 +293,114 @@
       generateBtn.disabled = true;
       setStatus('error', '没有完成识别', error && error.message ? error.message : '课表格式无法识别，请重新复制完整课表。');
     }
+  }
+
+  function setOcrProgress(value, label) {
+    const progress = Math.min(1, Math.max(0, Number(value) || 0));
+    ocrProgressBox.hidden = false;
+    ocrProgress.value = progress;
+    ocrProgress.textContent = `${Math.round(progress * 100)}%`;
+    ocrProgressLabel.textContent = label || '正在识别课表截图';
+    ocrProgressValue.textContent = `${Math.round(progress * 100)}%`;
+  }
+
+  function setOcrBusy(busy) {
+    ocrBusy = busy;
+    textSourceTab.disabled = busy;
+    imageSourceTab.disabled = busy;
+    ocrImageInput.disabled = busy;
+    ocrRecognizeBtn.disabled = busy || !selectedImageFile;
+    ocrRecognizeBtn.textContent = busy ? '正在识别…' : '识别课表截图';
+  }
+
+  async function previewImage(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = reject;
+        element.src = url;
+      });
+      const maxWidth = 920;
+      const scale = Math.min(1, maxWidth / image.naturalWidth);
+      ocrCanvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      ocrCanvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      ocrCanvas.getContext('2d').drawImage(image, 0, 0, ocrCanvas.width, ocrCanvas.height);
+      ocrCanvas.hidden = false;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function handleImageSelection() {
+    const file = ocrImageInput.files && ocrImageInput.files[0];
+    selectedImageFile = null;
+    resetRecognition();
+    ocrProgressBox.hidden = true;
+    if (!file) {
+      ocrCanvas.hidden = true;
+      ocrRecognizeBtn.disabled = true;
+      ocrFileMeta.textContent = '支持 PNG、JPG、WebP，最大 20 MB。';
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024 || (file.type && !/^image\/(?:png|jpeg|webp)$/.test(file.type))) {
+      ocrCanvas.hidden = true;
+      ocrRecognizeBtn.disabled = true;
+      setStatus('error', '图片无法使用', '仅支持 20 MB 以内的 PNG、JPG 或 WebP 图片。');
+      return;
+    }
+    try {
+      await previewImage(file);
+      selectedImageFile = file;
+      ocrFileMeta.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+      ocrRecognizeBtn.disabled = false;
+    } catch (error) {
+      ocrCanvas.hidden = true;
+      setStatus('error', '图片无法读取', '请换用 PNG 或 JPG 原图后重试。');
+    }
+  }
+
+  async function recognizeImage() {
+    if (!selectedImageFile || ocrBusy) return;
+    if (!ocr) {
+      setStatus('error', '截图识别模块未加载', '请刷新页面后重试；文本粘贴功能仍可正常使用。');
+      return;
+    }
+    resetRecognition();
+    setOcrBusy(true);
+    setOcrProgress(0, '正在读取图片');
+    setStatus('warning', '正在本地识别截图', '首次使用会下载并缓存 OCR 核心与中文模型，图片不会上传。');
+    try {
+      const result = await ocr.recognizeTimetableImage(selectedImageFile, {
+        previewCanvas: ocrCanvas,
+        defaultEndWeek: Number(totalWeeksInput.value) || 20,
+        onProgress(message) {
+          setOcrProgress(message.progress, message.label);
+        }
+      });
+      applyParsedResult(result, true);
+      const uncertain = result.meta.uncertainCount || 0;
+      setStatus('warning', '截图 OCR 已完成，尚未确认', `已定位周一至周日 7 列和第1至第10节，提取 ${result.meta.arrangementCount} 个上课安排。其中 ${uncertain} 条含不确定字段，请逐条修改并勾选“我已核对”后再生成课表码。`);
+    } catch (error) {
+      parsedResult = null;
+      resultPanel.hidden = true;
+      generateBtn.disabled = true;
+      setStatus('error', '截图识别未完成', error && error.message ? error.message : '请上传包含完整表头、左右边框和第1至第10节的清晰原图。');
+    } finally {
+      setOcrBusy(false);
+    }
+  }
+
+  function setSourceMode(mode) {
+    if (ocrBusy || mode === sourceMode) return;
+    sourceMode = mode;
+    const textActive = mode === 'text';
+    textSourceTab.setAttribute('aria-selected', String(textActive));
+    imageSourceTab.setAttribute('aria-selected', String(!textActive));
+    textSourcePanel.hidden = !textActive;
+    imageSourcePanel.hidden = textActive;
+    resetRecognition();
   }
 
   function parseDateOnly(value) {
@@ -161,7 +432,11 @@
 
   function generateCode() {
     if (!parsedResult || !parsedResult.meta.sourceLikelyComplete || !parsedResult.meta.clipboardStructureValid) {
-      setStatus('error', '暂不能生成课表码', '请先粘贴教务处原始纯文本，并通过周一到周日 7 列结构校验。');
+      setStatus('error', '暂不能生成课表码', '请先完成文本或截图识别，并通过完整课表结构校验。');
+      return;
+    }
+    if (isOcrResult() && !ocrReviewConfirm.checked) {
+      setStatus('warning', '请先核对 OCR 结果', '逐条修改课程信息后，勾选“我已逐条核对并修正下方所有课程”。');
       return;
     }
     try {
@@ -301,7 +576,20 @@
     resetRecognition();
   });
 
-  recognizeBtn.addEventListener('click', recognize);
+  recognizeBtn.addEventListener('click', recognizeText);
+  textSourceTab.addEventListener('click', () => setSourceMode('text'));
+  imageSourceTab.addEventListener('click', () => setSourceMode('image'));
+  ocrImageInput.addEventListener('change', handleImageSelection);
+  ocrRecognizeBtn.addEventListener('click', recognizeImage);
+  ocrReviewConfirm.addEventListener('change', () => {
+    updateGenerateAvailability();
+    resetGeneratedCode();
+    if (ocrReviewConfirm.checked) {
+      setStatus('success', 'OCR 结果已确认', '现在可以设置学期信息并生成 SYUCT-TT2 课表码。');
+    } else if (isOcrResult()) {
+      setStatus('warning', '截图 OCR 尚未确认', '请逐条核对课程信息后再次确认。');
+    }
+  });
   generateBtn.addEventListener('click', generateCode);
   copyBtn.addEventListener('click', copyCode);
   rawInput.addEventListener('input', () => {
@@ -309,4 +597,9 @@
     resetRecognition();
   });
   [semesterInput, firstWeekDateInput, totalWeeksInput].forEach((input) => input.addEventListener('input', resetGeneratedCode));
+
+  if (!ocr) {
+    imageSourceTab.disabled = true;
+    imageSourceTab.title = '截图 OCR 模块未加载';
+  }
 })();

@@ -90,6 +90,23 @@ for rel in protected:
     if not (ROOT / rel).exists():
         FAILURES.append(f"protected high-resolution source missing: {rel}")
 
+# Screenshot OCR must remain fully self-hosted; these are loaded only after the user starts OCR.
+ocr_assets = [
+    "assets/tesseract/v7.0.0/tesseract.min.js",
+    "assets/tesseract/v7.0.0/worker.min.js",
+    "assets/tesseract/v7.0.0/core/tesseract-core-lstm.wasm.js",
+    "assets/tesseract/v7.0.0/core/tesseract-core-simd-lstm.wasm.js",
+    "assets/tesseract/v7.0.0/core/tesseract-core-relaxedsimd-lstm.wasm.js",
+    "assets/tesseract/v7.0.0/lang/chi_sim.traineddata.gz",
+]
+for rel in ocr_assets:
+    if not (ROOT / rel).exists():
+        FAILURES.append(f"local timetable OCR asset missing: {rel}")
+
+ocr_source = (ROOT / "assets/timetable-ocr.js").read_text(encoding="utf-8")
+if re.search(r"https?://|cdn\.", ocr_source, flags=re.I):
+    FAILURES.append("assets/timetable-ocr.js must not load OCR code or models from a third-party origin")
+
 # Optimized files should actually be smaller than the corresponding source.
 pairs = [
     ("assets/syuct-community-icon.png", "assets/optimized/syuct-community-icon.webp"),
