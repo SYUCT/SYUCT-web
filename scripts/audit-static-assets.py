@@ -2,6 +2,7 @@
 """Fast, dependency-free static performance guard for SYUCT-web."""
 from __future__ import annotations
 
+import json
 import re
 import sys
 from collections import Counter
@@ -106,6 +107,27 @@ for rel in ocr_assets:
 ocr_source = (ROOT / "assets/timetable-ocr.js").read_text(encoding="utf-8")
 if re.search(r"https?://|cdn\.", ocr_source, flags=re.I):
     FAILURES.append("assets/timetable-ocr.js must not load OCR code or models from a third-party origin")
+
+# GitHub stats must have exactly one runtime owner. A previous duplicate loader
+# let the live API value and stale fallback JSON overwrite each other by timing.
+index_source = (ROOT / "index.html").read_text(encoding="utf-8")
+app_source = (ROOT / "assets/app.js").read_text(encoding="utf-8")
+if "initGitHubStats" in app_source or "github-stats.json" in app_source:
+    FAILURES.append("assets/app.js must not contain a second GitHub stats loader")
+if len(re.findall(r'<script\b[^>]*\bsrc=["\']assets/github-live-stats\.js\?[^"\']+["\']', index_source)) != 1:
+    FAILURES.append("index.html must load assets/github-live-stats.js exactly once")
+try:
+    fallback_stats = json.loads((ROOT / "assets/github-stats.json").read_text(encoding="utf-8"))
+    html_stars = re.search(r'<span data-github-stars>(\d+)</span>', index_source)
+    html_forks = re.search(r'<span data-github-forks>(\d+)</span>', index_source)
+    if not html_stars or not html_forks:
+        FAILURES.append("index.html is missing numeric GitHub stats fallbacks")
+    elif (int(html_stars.group(1)), int(html_forks.group(1))) != (
+        int(fallback_stats["stars"]), int(fallback_stats["forks"])
+    ):
+        FAILURES.append("index.html and assets/github-stats.json GitHub stats fallbacks differ")
+except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+    FAILURES.append(f"invalid assets/github-stats.json: {error}")
 
 # Optimized files should actually be smaller than the corresponding source.
 pairs = [

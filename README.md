@@ -36,6 +36,7 @@
 - **手机端课表转换重新开放并优化流程。** 默认进入截图识别，上传与识别按钮前置；识别结果使用可折叠课程卡，按“上传识别 → 核对修改 → 确认无误 → 设置生成”逐步引导。
 - **保留并优化网页粘贴。** 手机打开教务处后直接截取完整课表，OCR 通常更精准；电脑端教务处的表格排版更适合将整张课表复制到剪贴板并粘贴导入。
 - **课表教程与 PDF.js 维护调整。** 图文 PDF 教程移入“网页粘贴”入口；本地 PDF.js 工作流改为确定性生成和只读校验，不再尝试直接写入受保护的 `main` 分支。
+- **GitHub 统计显示修正。** 首页只保留一套 Star / Fork 更新逻辑，避免实时 API 与旧静态数据互相覆盖；当前静态兜底同步为 11 Star。
 - **文档数量重新核对。** `docs/` 现有 45 份原始文档，其中资料下载中心集中列出 42 份，另有 3 份页面专用文档；Office 本地预览仍为 22 份。
 
 ## v260822 更新
@@ -80,7 +81,7 @@
 - PDF 支持在线阅读、缩放、翻页和原文件下载
 - Word、Excel 支持本站本地转换预览，原文件仍可直接下载
 - 首页校园实景预览可一键跳转到完整校园相册
-- 首页可显示 GitHub 项目 Star / Fork；网页只读取 `assets/github-stats.json`，统计由 GitHub Actions 定时更新
+- 首页可显示 GitHub 项目 Star / Fork；由独立脚本读取 GitHub API 并缓存一小时，API 不可用时回退到 `assets/github-stats.json`
 - 校园社区为 GitHub Discussions 的只读镜像，发帖与回复仍在 GitHub 完成
 - 化大课表转换支持原始文本粘贴和课表截图 OCR，两条流程均在浏览器本地完成，课表内容和图片不会上传服务器
 - 图片按显示尺寸提供 WebP 版本，原图保留用于高清查看；站点图标按用途拆分尺寸
@@ -94,7 +95,7 @@ SYUCT-web/
 │       ├── vendor-pdfjs.yml           # 校验本地 PDF.js 运行文件
 │       ├── build-office-previews.yml  # 自动转换 Word / Excel 预览
 │       ├── update-community.yml       # 每小时同步 GitHub Discussions 镜像
-│       ├── update-github-stats.yml    # 定时更新 Star / Fork 静态统计
+│       ├── update-github-stats.yml    # 手动说明浏览器端 Star / Fork 获取方式
 │       └── static-performance-audit.yml # 静态资源与课表转换回归检查
 ├── assets/
 │   ├── icons/                         # 全站导航与入口 SVG 图标
@@ -103,7 +104,8 @@ SYUCT-web/
 │   ├── tesseract/                     # 截图 OCR 的本地 Tesseract.js、WASM 核心与中文模型
 │   ├── community-media/               # 社区讨论正文图片的本地缓存
 │   ├── office-preview-manifest.json   # Office 原文件与预览 PDF 映射
-│   ├── github-stats.json              # GitHub Star / Fork 静态统计
+│   ├── github-stats.json              # GitHub Star / Fork 静态兜底
+│   ├── github-live-stats.js           # 首页 GitHub API 实时统计与一小时缓存
 │   ├── community.json                 # 社区镜像数据（由工作流生成）
 │   ├── app.js                         # 全站交互、搜索与 Office 预览按钮
 │   ├── styles.css                     # 全站样式
@@ -161,7 +163,7 @@ SYUCT-web/
 
 ```html
 <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-<script defer src="assets/app.js?rev=20260821"></script>
+<script defer src="assets/app.js?rev=20260901"></script>
 ```
 
 `rev` 只用于缓存失效，不代表必须创建新文件。不要重新增加 `app-v129.js`、`styles-v129.css` 这类历史副本。

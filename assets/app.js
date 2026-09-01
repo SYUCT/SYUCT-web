@@ -87,29 +87,6 @@ function closeSidebar(){
   document.getElementById("sidebar")?.classList.remove("open");
   document.getElementById("backdrop")?.classList.remove("open");
 }
-async function initGitHubStats(){
-  const starNodes=[...document.querySelectorAll("[data-github-stars]")];
-  const forkNodes=[...document.querySelectorAll("[data-github-forks]")];
-  if(!starNodes.length && !forkNodes.length)return;
-  const threeHourBucket=Math.floor(Date.now()/(3*60*60*1000));
-  try{
-    const response=await fetch(`assets/github-stats.json?v=${threeHourBucket}`,{cache:"default"});
-    if(!response.ok)throw new Error(`HTTP ${response.status}`);
-    const data=await response.json();
-    const stars=Number(data?.stars);
-    const forks=Number(data?.forks);
-    if(!Number.isFinite(stars)||!Number.isFinite(forks))throw new Error("invalid stats payload");
-    const starsText=stars.toLocaleString("zh-CN");
-    const forksText=forks.toLocaleString("zh-CN");
-    starNodes.forEach(node=>node.textContent=starsText);
-    forkNodes.forEach(node=>node.textContent=forksText);
-    document.querySelectorAll(".hero-github-inline").forEach(link=>{
-      link.setAttribute("aria-label",`打开 GitHub 开源项目，${stars} 个 Star，${forks} 个 Fork`);
-    });
-  }catch(error){
-    console.warn("[SYUCT] GitHub 统计加载失败",error);
-  }
-}
 function closeQuickLinks(){
   document.getElementById("quickLinks")?.classList.remove("open");
   document.getElementById("quickLinksButton")?.setAttribute("aria-expanded","false");
@@ -356,7 +333,6 @@ function runSafely(name,fn){
 document.addEventListener("DOMContentLoaded",()=>{
   runSafely("响应式标题",updateResponsiveTitle);
   runSafely("导航栏",renderChrome);
-  initGitHubStats().catch(error=>console.warn("[SYUCT] GitHub 统计未启用",error));
   runSafely("主题",initTheme);
   runSafely("QQ群弹窗",initGroupModal);
   runSafely("图片预览",initLightbox);

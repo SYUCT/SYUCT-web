@@ -3,7 +3,7 @@
 
   const API_URL = 'https://api.github.com/repos/SYUCT/SYUCT-web';
   const FALLBACK_URL = 'assets/github-stats.json';
-  const CACHE_KEY = 'syuct:github-repo-stats:v2';
+  const CACHE_KEY = 'syuct:github-repo-stats:v3';
   const CACHE_TTL_MS = 60 * 60 * 1000;
 
   const toCount = (value) => {
@@ -28,11 +28,16 @@
   };
 
   const render = ({ stars, forks }) => {
+    const starsText = stars.toLocaleString('zh-CN');
+    const forksText = forks.toLocaleString('zh-CN');
     document.querySelectorAll('[data-github-stars]').forEach((node) => {
-      node.textContent = String(stars);
+      node.textContent = starsText;
     });
     document.querySelectorAll('[data-github-forks]').forEach((node) => {
-      node.textContent = String(forks);
+      node.textContent = forksText;
+    });
+    document.querySelectorAll('.hero-github-inline').forEach((link) => {
+      link.setAttribute('aria-label', `打开 GitHub 开源项目，${stars} 个 Star，${forks} 个 Fork`);
     });
   };
 
