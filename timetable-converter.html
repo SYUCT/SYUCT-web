@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#075ca8">
   <title>化大课表转换 · 沈阳化工大学校园指南（学生共创版）</title>
   <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-  <link href="assets/timetable-converter.css?rev=20260831-ocr1" rel="stylesheet">
+  <link href="assets/timetable-converter.css?rev=20260831-ocr2" rel="stylesheet">
   <link href="assets/favicon-32.png" rel="icon" type="image/png" sizes="32x32">
   <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 </head>
@@ -41,61 +41,64 @@
         <header class="article-header tt-hero">
           <div class="breadcrumb">首页 / 办事大厅 / 化大课表转换</div>
           <h1>化大课表转换</h1>
-          <p>可以粘贴电脑端教务处完整课表，也可以上传课表截图。本页在浏览器本地识别后生成 <strong>SYUCT-TT2</strong> 课表码，发到手机即可在小程序导入。</p>
-          <div class="tt-flow" aria-label="课表转换流程">
-            <div class="tt-flow-step"><b>1</b><span>复制完整课表，或准备原始截图</span></div>
-            <div class="tt-flow-step"><b>2</b><span>粘贴或上传到本页识别</span></div>
-            <div class="tt-flow-step"><b>3</b><span>生成并复制课表码</span></div>
-            <div class="tt-flow-step"><b>4</b><span>发到微信，在小程序导入</span></div>
-          </div>
-          <div class="tt-guide-card">
-            <div class="tt-guide-copy">
-              <strong>看不懂？带截图的图文教程</strong>
-              <span>6 页 PDF，逐步演示从复制课表到小程序导入，含常见问题。</span>
-            </div>
-            <div class="tt-guide-actions">
-              <a class="tt-button tt-button-primary" href="pdf-viewer.html?file=docs/timetable-converter-guide.pdf&amp;title=%E5%8C%96%E5%A4%A7%E8%AF%BE%E8%A1%A8%E8%BD%AC%E6%8D%A2%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E" target="_blank" rel="noreferrer">打开图文教程</a>
-              <a class="tt-button tt-button-secondary" href="docs/timetable-converter-guide.pdf" download>下载 PDF</a>
-            </div>
-          </div>
-          <div class="tt-privacy"><strong>隐私说明：</strong>文字解析、图片预处理和 OCR 全部在浏览器本地完成，课表图片及课程、教师、教室等信息不会上传。首次使用截图识别时，浏览器会从本站下载约 6 MB 的 OCR 核心和中文模型。</div>
+          <p class="tt-hero-lead">手机上传完整课表截图，识别后按步骤核对、确认并生成 <strong>SYUCT-TT2</strong> 课表码。</p>
         </header>
 
         <section class="tt-section" id="recognize">
           <div class="tt-section-head">
-            <h2>1. 导入并识别课表</h2>
-            <p>文本粘贴最准确；截图 OCR 是第一版测试功能，识别后必须逐条核对。</p>
-          </div>
-
-          <div class="tt-source-tabs" role="tablist" aria-label="课表导入方式">
-            <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="true" aria-controls="textSourcePanel">粘贴课表文本（推荐）</button>
-            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="false" aria-controls="imageSourcePanel">上传课表截图（测试版）</button>
-          </div>
-
-          <div id="textSourcePanel" role="tabpanel" aria-labelledby="textSourceTab">
-            <p class="tt-source-help">必须在电脑端教务处原页面复制，从左上角「时间」拖选到页面右下角。经微信、QQ 转发后会丢失格式，导致星期错位。</p>
-            <label class="tt-label" for="rawTimetable">教务处课表复制内容</label>
-            <textarea id="rawTimetable" class="tt-textarea" spellcheck="false" autocomplete="off" placeholder="在这里粘贴从校园网页复制的完整课表……"></textarea>
-            <div class="tt-actions">
-              <button class="tt-button tt-button-primary" id="recognizeBtn" type="button">识别课表</button>
+            <span class="tt-step-kicker">第1步</span>
+            <div>
+              <h2>上传并识别课表</h2>
+              <p>手机优先使用截图识别；电脑端也可切换到网页粘贴。</p>
             </div>
           </div>
 
-          <div id="imageSourcePanel" role="tabpanel" aria-labelledby="imageSourceTab" hidden>
+          <ol class="tt-journey" aria-label="课表转换步骤">
+            <li class="is-active" data-workflow-step="1"><b>1</b><span>上传识别</span></li>
+            <li data-workflow-step="2"><b>2</b><span>核对修改</span></li>
+            <li data-workflow-step="3"><b>3</b><span>确认无误</span></li>
+            <li data-workflow-step="4"><b>4</b><span>设置生成</span></li>
+          </ol>
+
+          <div class="tt-source-tabs" role="tablist" aria-label="课表导入方式">
+            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="true" aria-controls="imageSourcePanel">截图识别（推荐）</button>
+            <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="false" aria-controls="textSourcePanel">网页粘贴</button>
+          </div>
+
+          <div id="imageSourcePanel" role="tabpanel" aria-labelledby="imageSourceTab">
             <div class="tt-ocr-guide">
-              <strong>截图需要完整保留课表网格</strong>
-              <span>支持正方教务系统这类“星期一至星期日 + 第1节至第10节”的正向截图。优先上传手机原图，不要裁掉表头和左右边框，也不要拍摄倾斜的屏幕照片。</span>
+              <strong>上传完整、清晰、方向正常的课表截图</strong>
+              <span>请保留星期一至星期日、第1至第10节和网格边框。图片只在本机处理，不会上传；首次识别会下载约 6 MB 的 OCR 文件。</span>
             </div>
             <label class="tt-label" for="ocrImageInput">课表截图</label>
             <input id="ocrImageInput" class="tt-file-input" type="file" accept="image/png,image/jpeg,image/webp">
             <p class="tt-file-meta" id="ocrFileMeta">支持 PNG、JPG、WebP，最大 20 MB。</p>
-            <canvas class="tt-ocr-canvas" id="ocrCanvas" hidden aria-label="课表截图与自动定位的网格预览"></canvas>
+            <div class="tt-actions tt-upload-actions">
+              <button class="tt-button tt-button-primary" id="ocrRecognizeBtn" type="button" disabled>开始识别截图</button>
+            </div>
             <div class="tt-ocr-progress" id="ocrProgressBox" hidden>
               <div><strong id="ocrProgressLabel">正在准备 OCR</strong><span id="ocrProgressValue">0%</span></div>
               <progress id="ocrProgress" max="1" value="0">0%</progress>
             </div>
+            <canvas class="tt-ocr-canvas" id="ocrCanvas" hidden aria-label="课表截图与自动定位的网格预览"></canvas>
+          </div>
+
+          <div id="textSourcePanel" role="tabpanel" aria-labelledby="textSourceTab" hidden>
+            <p class="tt-source-help">必须在电脑端教务处原页面复制，从左上角“时间”拖选到页面右下角。经微信、QQ 转发后会丢失格式，导致星期错位。</p>
+            <details class="tt-text-guide">
+              <summary>不会复制网页课表？查看图文教程</summary>
+              <div class="tt-text-guide-body">
+                <p>6 页 PDF，逐步演示从复制课表到小程序导入，并包含常见问题。</p>
+                <div class="tt-guide-actions">
+                  <a class="tt-button tt-button-primary" href="pdf-viewer.html?file=docs/timetable-converter-guide.pdf&amp;title=%E5%8C%96%E5%A4%A7%E8%AF%BE%E8%A1%A8%E8%BD%AC%E6%8D%A2%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E" target="_blank" rel="noreferrer">打开图文教程</a>
+                  <a class="tt-button tt-button-secondary" href="docs/timetable-converter-guide.pdf" download>下载 PDF</a>
+                </div>
+              </div>
+            </details>
+            <label class="tt-label" for="rawTimetable">教务处课表复制内容</label>
+            <textarea id="rawTimetable" class="tt-textarea" spellcheck="false" autocomplete="off" placeholder="在这里粘贴从校园网页复制的完整课表……"></textarea>
             <div class="tt-actions">
-              <button class="tt-button tt-button-primary" id="ocrRecognizeBtn" type="button" disabled>识别课表截图</button>
+              <button class="tt-button tt-button-primary" id="recognizeBtn" type="button">识别粘贴内容</button>
             </div>
           </div>
 
@@ -112,24 +115,40 @@
               <div class="tt-summary-card"><strong id="evenCount">0</strong><span>个双周安排</span></div>
             </div>
             <div class="tt-practice-notice" id="practiceNotice" hidden></div>
-            <div class="tt-ocr-review" id="ocrReviewPanel" hidden>
-              <strong>OCR 结果是可修改的初稿</strong>
-              <p>请对照上方原图逐条修改课程名、教师、教室、星期、节次和周次。黄色卡片包含机器无法可靠判断的字段。</p>
-              <label><input id="ocrReviewConfirm" type="checkbox"> 我已逐条核对并修正下方所有课程</label>
+            <div class="tt-next-step">
+              <span class="tt-step-kicker">第2步</span>
+              <div>
+                <strong id="resultGuideTitle">核对并修改识别结果</strong>
+                <p id="resultGuideMessage">逐条打开课程，对照原图修改课程名、教师、教室、星期、节次和周次。</p>
+              </div>
             </div>
-            <h3 class="tt-preview-title">课程预览</h3>
+            <h3 class="tt-preview-title" id="coursePreviewTitle">课程列表（点击展开修改）</h3>
             <div class="tt-preview" id="coursePreview"></div>
             <details class="tt-ocr-raw" id="ocrRawDetails" hidden>
               <summary>查看 OCR 分格原文（排查漏识别时使用）</summary>
               <pre id="ocrRawOutput"></pre>
             </details>
+            <div class="tt-ocr-review" id="ocrReviewPanel" hidden>
+              <div class="tt-review-heading">
+                <span class="tt-step-kicker">第3步</span>
+                <div>
+                  <strong>确认全部课程无误</strong>
+                  <p>确认前请至少核对课程数量，并检查黄色“需核对”课程。</p>
+                </div>
+              </div>
+              <label class="tt-review-check"><input id="ocrReviewConfirm" type="checkbox"> <span>我已对照原图，逐条核对并修正全部课程</span></label>
+              <p class="tt-review-hint" id="ocrReviewHint">勾选后即可进入第4步，设置学期并生成课表码。</p>
+            </div>
           </div>
         </section>
 
         <section class="tt-section" id="settings">
           <div class="tt-section-head">
-            <h2>2. 设置学期信息</h2>
-            <p>第一周周一不确定时可以留空；总周数默认 20 周。</p>
+            <span class="tt-step-kicker">第4步</span>
+            <div>
+              <h2>设置并生成课表码</h2>
+              <p>第一周周一不确定时可以留空；总周数默认 20 周。</p>
+            </div>
           </div>
           <div class="tt-settings">
             <div class="tt-field">
@@ -146,20 +165,15 @@
               <input id="totalWeeks" class="tt-input" type="number" min="1" max="30" step="1" value="20" inputmode="numeric">
             </div>
           </div>
-        </section>
-
-        <section class="tt-section" id="share">
-          <div class="tt-section-head">
-            <h2>3. 生成 SYUCT-TT2 课表码</h2>
-            <p>只有识别结果确认完整后才可生成。生成后实际教学方案有所变动，请在小程序上手动编辑。</p>
+          <div class="tt-generate-area" id="share">
+            <div class="tt-actions">
+              <button class="tt-button tt-button-primary" id="generateBtn" type="button" disabled>生成课表码</button>
+              <button class="tt-button tt-button-secondary" id="copyCodeBtn" type="button" disabled>复制课表码</button>
+              <span class="tt-code-meta" id="codeMeta"></span>
+            </div>
+            <textarea id="shareCode" class="tt-textarea tt-code" readonly hidden aria-label="生成的 SYUCT-TT2 课表码"></textarea>
+            <p class="tt-note">复制后可把整段课表码发送到微信，在 SH 小程序的课表导入功能中粘贴。调、停（补）课信息第一版暂不处理。</p>
           </div>
-          <div class="tt-actions">
-            <button class="tt-button tt-button-primary" id="generateBtn" type="button" disabled>生成课表码</button>
-            <button class="tt-button tt-button-secondary" id="copyCodeBtn" type="button" disabled>复制课表码</button>
-            <span class="tt-code-meta" id="codeMeta"></span>
-          </div>
-          <textarea id="shareCode" class="tt-textarea tt-code" readonly hidden aria-label="生成的 SYUCT-TT2 课表码"></textarea>
-          <p class="tt-note">复制后可把整段课表码发送到微信，在SH小程序的课表导入功能中粘贴。调、停（补）课信息第一版暂不处理。</p>
         </section>
 
         <footer class="tt-footer">
@@ -176,6 +190,6 @@
   <script defer src="assets/timetable-campus-parser.js?rev=20260818f"></script>
   <script defer src="assets/timetable-codec.js?rev=20260818"></script>
   <script defer src="assets/timetable-ocr.js?rev=20260831-ocr1"></script>
-  <script defer src="assets/timetable-converter.js?rev=20260831-ocr1"></script>
+  <script defer src="assets/timetable-converter.js?rev=20260831-ocr2"></script>
 </body>
 </html>

@@ -31,11 +31,16 @@
   const oddCount = document.getElementById('oddCount');
   const evenCount = document.getElementById('evenCount');
   const practiceNotice = document.getElementById('practiceNotice');
+  const resultGuideTitle = document.getElementById('resultGuideTitle');
+  const resultGuideMessage = document.getElementById('resultGuideMessage');
+  const coursePreviewTitle = document.getElementById('coursePreviewTitle');
   const ocrReviewPanel = document.getElementById('ocrReviewPanel');
   const ocrReviewConfirm = document.getElementById('ocrReviewConfirm');
+  const ocrReviewHint = document.getElementById('ocrReviewHint');
   const ocrRawDetails = document.getElementById('ocrRawDetails');
   const ocrRawOutput = document.getElementById('ocrRawOutput');
   const previewList = document.getElementById('coursePreview');
+  const workflowSteps = Array.from(document.querySelectorAll('[data-workflow-step]'));
   const semesterInput = document.getElementById('semester');
   const firstWeekDateInput = document.getElementById('firstWeekDate');
   const totalWeeksInput = document.getElementById('totalWeeks');
@@ -47,8 +52,22 @@
   let parsedResult = null;
   let clipboardHtml = '';
   let selectedImageFile = null;
-  let sourceMode = 'text';
+  let sourceMode = 'image';
   let ocrBusy = false;
+
+  const defaultReviewHint = '勾选后即可进入第4步，设置学期并生成课表码。';
+
+  function setWorkflowStep(step) {
+    workflowSteps.forEach((item) => {
+      const itemStep = Number(item.dataset.workflowStep);
+      const done = step > 4 || itemStep < step;
+      const active = step <= 4 && itemStep === step;
+      item.classList.toggle('is-done', done);
+      item.classList.toggle('is-active', active);
+      if (active) item.setAttribute('aria-current', 'step');
+      else item.removeAttribute('aria-current');
+    });
+  }
 
   function setStatus(kind, title, message) {
     statusBox.hidden = false;
@@ -79,12 +98,17 @@
     practiceNotice.textContent = '';
     ocrReviewPanel.hidden = true;
     ocrReviewConfirm.checked = false;
+    ocrReviewHint.textContent = defaultReviewHint;
     ocrRawDetails.hidden = true;
     ocrRawDetails.open = false;
     ocrRawOutput.textContent = '';
+    ocrProgressBox.hidden = true;
+    ocrProgress.value = 0;
+    ocrProgressValue.textContent = '0%';
     generateBtn.disabled = true;
     resetGeneratedCode();
     clearStatus();
+    setWorkflowStep(1);
   }
 
   function isOcrResult() {
@@ -162,22 +186,52 @@
     editor.appendChild(field);
   }
 
+  function invalidateOcrReview(message) {
+    ocrReviewConfirm.checked = false;
+    ocrReviewHint.textContent = message || '内容已修改，请继续核对；全部无误后再勾选确认。';
+    setWorkflowStep(3);
+    updateGenerateAvailability();
+    resetGeneratedCode();
+    if (isOcrResult()) setStatus('warning', '截图 OCR 尚未确认', '识别结果有改动，请继续核对，并在全部无误后重新勾选确认。');
+  }
+
   function handleOcrEdit(course, field, value) {
     const numericFields = new Set(['weekday', 'startSection', 'endSection', 'startWeek', 'endWeek']);
     course[field] = numericFields.has(field) ? Number(value) : value;
     course.ocrEdited = true;
-    ocrReviewConfirm.checked = false;
     updateSummary();
-    updateGenerateAvailability();
-    resetGeneratedCode();
+    invalidateOcrReview();
   }
 
   function renderEditableCourse(item, course, index) {
     const issues = Array.isArray(course.ocrIssues) ? course.ocrIssues : [];
     item.dataset.ocrWarning = issues.length ? 'true' : 'false';
+
+    const summary = document.createElement('summary');
+    summary.className = 'tt-course-card-summary';
+    const summaryCopy = document.createElement('span');
+    summaryCopy.className = 'tt-course-card-summary-copy';
+    const summaryName = document.createElement('strong');
+    const summaryMeta = document.createElement('small');
+    summaryCopy.append(summaryName, summaryMeta);
+    const summaryBadge = document.createElement('span');
+    summaryBadge.className = 'tt-course-summary-badge';
+    summary.append(summaryCopy, summaryBadge);
+    item.appendChild(summary);
+
+    function refreshSummary() {
+      summaryName.textContent = course.name || '未填写课程名称';
+      summaryMeta.textContent = `${weekdayNames[course.weekday] || '星期待定'} · ${course.startSection || '?'}-${course.endSection || '?'}节 · ${course.startWeek || '?'}-${course.endWeek || '?'}周${weekTypeNames[course.weekType] || ''}`;
+      summaryBadge.textContent = issues.length ? '需核对' : (course.ocrEdited ? '已修改' : '查看修改');
+    }
+    refreshSummary();
+
     const editor = document.createElement('div');
     editor.className = 'tt-course-editor';
-    const change = (field) => (value) => handleOcrEdit(course, field, value);
+    const change = (field) => (value) => {
+      handleOcrEdit(course, field, value);
+      refreshSummary();
+    };
 
     addEditorField(editor, { label: '课程名称', value: course.name, maxLength: 120, className: 'tt-edit-wide', onChange: change('name') });
     addEditorField(editor, { label: '教师', value: course.teacher, maxLength: 80, className: 'tt-edit-half', onChange: change('teacher') });
@@ -213,11 +267,9 @@
     remove.addEventListener('click', () => {
       parsedResult.courses.splice(index, 1);
       parsedResult.courses.forEach((entry, colorIndex) => { entry.colorIndex = colorIndex % 6; });
-      ocrReviewConfirm.checked = false;
       updateSummary();
       renderPreview(parsedResult.courses, true);
-      updateGenerateAvailability();
-      resetGeneratedCode();
+      invalidateOcrReview('已删除一条课程，请重新确认剩余课程数量和内容。');
     });
     actions.append(confidence, remove);
     editor.appendChild(actions);
@@ -227,7 +279,7 @@
   function renderPreview(courses, editable) {
     previewList.replaceChildren();
     courses.forEach((course, index) => {
-      const item = document.createElement('article');
+      const item = document.createElement(editable ? 'details' : 'article');
       item.className = 'tt-course-card';
       if (editable) renderEditableCourse(item, course, index);
       else renderStaticCourse(item, course);
@@ -251,8 +303,17 @@
     resultPanel.hidden = false;
     ocrReviewPanel.hidden = !editable;
     ocrReviewConfirm.checked = false;
-    if (editable) renderRawOcr(result.meta);
+    ocrReviewHint.textContent = defaultReviewHint;
+    if (editable) {
+      resultGuideTitle.textContent = '核对并修改识别结果';
+      resultGuideMessage.textContent = '点击课程卡片展开编辑，对照原图检查课程名、教师、教室、星期、节次和周次。';
+      coursePreviewTitle.textContent = '课程列表（点击展开修改）';
+      renderRawOcr(result.meta);
+    }
     else {
+      resultGuideTitle.textContent = '核对课程预览';
+      resultGuideMessage.textContent = '检查课程数量、星期和节次；确认无误后直接进入第4步设置并生成。';
+      coursePreviewTitle.textContent = '课程预览';
       ocrRawDetails.hidden = true;
       ocrRawOutput.textContent = '';
     }
@@ -265,6 +326,7 @@
       practiceNotice.textContent = '';
     }
     updateGenerateAvailability();
+    setWorkflowStep(2);
   }
 
   function recognizeText() {
@@ -287,6 +349,7 @@
         ? `浏览器剪贴板中的课表表格结构校验通过：已确认周一到周日 ${result.meta.weekdaySlotCount} 列。`
         : `纯文本课表结构校验通过：${result.meta.validatedSectionRows} 个节次行均还原为周一到周日 ${result.meta.weekdaySlotCount} 个星期槽。`;
       setStatus('success', '星期列校验通过', `${structureMessage} 共识别 ${result.meta.arrangementCount} 个上课安排、${result.meta.uniqueCourseCount} 门不同课程，请核对下方预览后再生成。`);
+      setWorkflowStep(4);
     } catch (error) {
       parsedResult = null;
       resultPanel.hidden = true;
@@ -310,7 +373,7 @@
     imageSourceTab.disabled = busy;
     ocrImageInput.disabled = busy;
     ocrRecognizeBtn.disabled = busy || !selectedImageFile;
-    ocrRecognizeBtn.textContent = busy ? '正在识别…' : '识别课表截图';
+    ocrRecognizeBtn.textContent = busy ? '正在识别…' : '开始识别截图';
   }
 
   async function previewImage(file) {
@@ -447,6 +510,7 @@
       copyBtn.disabled = false;
       codeMeta.textContent = `已生成 SYUCT-TT2 · ${parsedResult.courses.length} 个上课安排 · ${code.length} 个字符`;
       setStatus('success', '课表码已生成', '核对无误后复制完整课表码，通过微信发送，并在 SYUCT-mini 的课表导入功能中粘贴导入。');
+      setWorkflowStep(5);
       shareCodeOutput.focus({ preventScroll: true });
       shareCodeOutput.select();
     } catch (error) {
@@ -585,8 +649,12 @@
     updateGenerateAvailability();
     resetGeneratedCode();
     if (ocrReviewConfirm.checked) {
+      ocrReviewHint.textContent = '已确认。下一步：填写下方学期信息并生成课表码。';
+      setWorkflowStep(4);
       setStatus('success', 'OCR 结果已确认', '现在可以设置学期信息并生成 SYUCT-TT2 课表码。');
     } else if (isOcrResult()) {
+      ocrReviewHint.textContent = '尚未确认，请逐条核对课程后再次勾选。';
+      setWorkflowStep(3);
       setStatus('warning', '截图 OCR 尚未确认', '请逐条核对课程信息后再次确认。');
     }
   });
@@ -596,10 +664,16 @@
     clipboardHtml = '';
     resetRecognition();
   });
-  [semesterInput, firstWeekDateInput, totalWeeksInput].forEach((input) => input.addEventListener('input', resetGeneratedCode));
+  [semesterInput, firstWeekDateInput, totalWeeksInput].forEach((input) => input.addEventListener('input', () => {
+    resetGeneratedCode();
+    if (!generateBtn.disabled) setWorkflowStep(4);
+  }));
 
   if (!ocr) {
     imageSourceTab.disabled = true;
     imageSourceTab.title = '截图 OCR 模块未加载';
+    setSourceMode('text');
   }
+
+  setWorkflowStep(1);
 })();
