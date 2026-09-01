@@ -8,7 +8,7 @@
 
 把分散的新生通知、校园地图、学业资料、办事表格和校园经验，整理成一条更容易查找的路径。
 
-**当前版本：v260822** · **44 份资料** · **22 份 Office 本地预览** · **4 张实用导航地图** · **1 个官方校园全景** · **12 张校园实景照片**
+**当前版本：v260901** · **45 份站内文档** · **22 份 Office 本地预览** · **4 张实用导航地图** · **1 个官方校园全景** · **12 张校园实景照片**
 
 [访问主站](https://www.syuct.top/) · [GitHub Pages 备用入口](https://syuct.github.io/SYUCT-web/) · [校园社区](https://www.syuct.top/community.html) · [资料下载](https://www.syuct.top/resources.html) · [参与共建](https://www.syuct.top/about.html)
 
@@ -29,6 +29,14 @@
 | 主站 | <https://www.syuct.top/> | EdgeOne Pages 自定义域名，日常分享优先使用 |
 | 备用站 | <https://syuct.github.io/SYUCT-web/> | GitHub Pages 备用入口 |
 | 源码仓库 | <https://github.com/SYUCT/SYUCT-web> | 查看源码、提交 Issue 或 Pull Request |
+
+## v260901 更新
+
+- **新增本地课表截图 OCR。** 支持上传正方教务系统完整课表截图，浏览器本地完成 Canvas 预处理、Tesseract.js 中文识别和固定网格解析，再复用现有课程结构生成 `SYUCT-TT2`。
+- **手机端课表转换重新开放并优化流程。** 默认进入截图识别，上传与识别按钮前置；识别结果使用可折叠课程卡，按“上传识别 → 核对修改 → 确认无误 → 设置生成”逐步引导。
+- **保留并优化网页粘贴。** 手机打开教务处后直接截取完整课表，OCR 通常更精准；电脑端教务处的表格排版更适合将整张课表复制到剪贴板并粘贴导入。
+- **课表教程与 PDF.js 维护调整。** 图文 PDF 教程移入“网页粘贴”入口；本地 PDF.js 工作流改为确定性生成和只读校验，不再尝试直接写入受保护的 `main` 分支。
+- **文档数量重新核对。** `docs/` 现有 45 份原始文档，其中资料下载中心集中列出 42 份，另有 3 份页面专用文档；Office 本地预览仍为 22 份。
 
 ## v260822 更新
 
@@ -83,7 +91,7 @@
 SYUCT-web/
 ├── .github/
 │   └── workflows/
-│       ├── vendor-pdfjs.yml           # 自动维护本地 PDF.js
+│       ├── vendor-pdfjs.yml           # 校验本地 PDF.js 运行文件
 │       ├── build-office-previews.yml  # 自动转换 Word / Excel 预览
 │       ├── update-community.yml       # 每小时同步 GitHub Discussions 镜像
 │       ├── update-github-stats.yml    # 定时更新 Star / Fork 静态统计
@@ -170,7 +178,7 @@ SYUCT-web/
 4. 根据 OCR 文字坐标和网格位置生成现有课程对象，再复用 `timetable-codec.js` 生成 `SYUCT-TT2`；
 5. OCR 结果以可编辑课程卡展示，必须由用户确认后才能生成课表码。
 
-首次识别会从本站按需下载约 6 MB 的 OCR 核心与中文模型，浏览器随后会缓存模型。当前版本只接受完整、正向、未裁掉星期日与第 10 节的正方教务系统课表截图；倾斜照片、缺列截图和严重压缩图片会被拒绝或要求人工修正。
+手机端建议直接打开教务处并截取完整课表，截图比例通常更适合 OCR；电脑端教务处的表格排版更适合将整张课表复制到剪贴板并粘贴导入。首次识别会从本站按需下载约 6 MB 的 OCR 核心与中文模型，浏览器随后会缓存模型。当前版本只接受完整、正向、未裁掉星期日与第 10 节的正方教务系统课表截图；倾斜照片、缺列截图和严重压缩图片会被拒绝或要求人工修正。
 
 ## 校园社区镜像
 
