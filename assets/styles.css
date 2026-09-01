@@ -703,3 +703,7 @@ html[data-theme="dark"] .freshman-gate-visual::before{
   .resource-search input{height:40px;font-size:14px}
   .filter-chip{min-height:40px;padding:0 11px;font-size:13px}
 }
+
+/* v1.35 — homepage action grouping */
+.hero-actions-home{align-items:flex-start;flex-direction:column}
+.hero-actions-secondary{display:flex;flex-wrap:wrap;gap:12px}
