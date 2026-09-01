@@ -10,8 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pages: write
+  contents: read
 
 concurrency:
   group: vendor-local-pdfjs
@@ -37,21 +36,12 @@ jobs:
       - name: Copy browser runtime into the site
         run: npm run vendor:pdfjs
 
-      - name: Commit local PDF.js files
+      - name: Verify committed PDF.js files
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A assets
-          if git diff --cached --quiet; then
+          if git diff --quiet -- assets/pdfjs; then
             echo "Local PDF.js files are already up to date."
-            exit 0
+          else
+            git diff --stat -- assets/pdfjs
+            echo "::error::Committed PDF.js files are out of date. Run npm run vendor:pdfjs locally and include assets/pdfjs in the pull request."
+            exit 1
           fi
-          git commit -m "chore: vendor local PDF.js 6.2.108 [skip ci]"
-          git push
-
-      - name: Request GitHub Pages rebuild
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api --method POST -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/${GITHUB_REPOSITORY}/pages/builds"

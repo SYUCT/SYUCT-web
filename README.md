@@ -210,7 +210,7 @@ SYUCT-web/
 
 ## 本地 PDF.js 与 Office 预览
 
-项目通过 GitHub Actions 固定并维护 `pdfjs-dist`，运行文件保存在 `assets/pdfjs/`。PDF 阅读器与 PDF 原文件均从本站加载。
+项目固定使用 `pdfjs-dist`，运行文件保存在 `assets/pdfjs/`。GitHub Actions 只读校验仓库中的运行文件是否与固定版本一致，不会直接写入受保护的 `main` 分支；实际升级时需在更新 PR 中一并提交重新生成的 `assets/pdfjs/`。PDF 阅读器与 PDF 原文件均从本站加载。
 
 Word、Excel 原文件上传到 `docs/` 后，`Build local Office previews` 工作流会生成 `docs/previews/*.pdf` 并更新 `assets/office-preview-manifest.json`；全站脚本只在页面确实包含对应文档链接时读取预览清单。
 

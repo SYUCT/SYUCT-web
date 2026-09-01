@@ -76,7 +76,6 @@ const manifest = {
   package: "pdfjs-dist",
   version: packageInfo.version,
   build: pdfModule.includes(`${path.sep}legacy${path.sep}`) ? "legacy" : "modern",
-  generatedAt: new Date().toISOString(),
   runtimeFiles: [
     "pdf.min.mjs",
     "pdf.worker.min.mjs",
