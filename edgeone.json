@@ -1,6 +1,23 @@
 {
   "headers": [
     {
+      "source": "/assets/syuct-timetable-capture.user.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"syuct-timetable-capture.user.js\""
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
       "source": "/assets/*",
       "headers": [
         {

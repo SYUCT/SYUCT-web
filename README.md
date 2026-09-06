@@ -178,7 +178,7 @@ SYUCT-web/
 
 `timetable-converter.html` 提供四种入口：
 
-- 本科新版教务处：安装 `syuct-timetable-capture.user.js`，在个人课表页生成脱敏 JSON 样本，供页面结构适配使用；
+- 本科新版教务处：下载 `syuct-timetable-capture.user.js` 并从用户脚本管理器导入，在个人课表页生成脱敏 JSON 样本，供页面结构适配使用；普通浏览器直接打开脚本文件只会显示源码；
 - 研究生教务处：上传“打印课表”生成的原始 PDF，PDF.js 在本地读取文字与坐标，再由 `timetable-graduate-pdf.js` 还原课程；
 - 网页粘贴：保留原有完整课表复制、粘贴流程；
 - 截图 OCR：保留为旧版完整课表截图的备用入口。
