@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="沈阳化工大学校园网页课表本地转换工具：粘贴完整课表或上传课表截图，在浏览器本地识别并生成 SYUCT-TT2 课表码供 SYUCT-mini 导入。">
+  <meta name="description" content="沈阳化工大学课表本地转换工具：支持本科教务处结构采集、研究生课表 PDF、截图 OCR 和网页粘贴，并生成 SYUCT-TT2 课表码。">
   <meta name="theme-color" content="#075ca8">
   <title>化大课表转换 · 沈阳化工大学校园指南（学生共创版）</title>
   <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-  <link href="assets/timetable-converter.css?rev=20260831-ocr2" rel="stylesheet">
+  <link href="assets/timetable-converter.css?rev=20260906-import1" rel="stylesheet">
   <link href="assets/favicon-32.png" rel="icon" type="image/png" sizes="32x32">
   <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 </head>
@@ -41,34 +41,48 @@
         <header class="article-header tt-hero">
           <div class="breadcrumb">首页 / 办事大厅 / 化大课表转换</div>
           <h1>化大课表转换</h1>
-          <p class="tt-hero-lead">手机上传完整课表截图，识别后按步骤核对、确认并生成 <strong>SYUCT-TT2</strong> 课表码。</p>
+          <p class="tt-hero-lead">本科采集课表结构，研究生上传课表 PDF；核对后生成 <strong>SYUCT-TT2</strong> 课表码。</p>
         </header>
 
         <section class="tt-section" id="recognize">
           <div class="tt-section-head">
             <span class="tt-step-kicker">第1步</span>
             <div>
-              <h2>上传并识别课表</h2>
-              <p>手机教务处截图更适合 OCR；电脑端教务处排版更适合剪贴板导入。</p>
+              <h2>选择导入方式</h2>
+              <p>全部在浏览器本地处理，不上传课表文件或课程信息。</p>
             </div>
           </div>
 
           <ol class="tt-journey" aria-label="课表转换步骤">
-            <li class="is-active" data-workflow-step="1"><b>1</b><span>上传识别</span></li>
+            <li class="is-active" data-workflow-step="1"><b>1</b><span>导入识别</span></li>
             <li data-workflow-step="2"><b>2</b><span>核对修改</span></li>
             <li data-workflow-step="3"><b>3</b><span>确认无误</span></li>
             <li data-workflow-step="4"><b>4</b><span>设置生成</span></li>
           </ol>
 
+          <div class="tt-reader-card">
+            <div class="tt-reader-copy">
+              <span class="tt-method-badge">本科</span>
+              <strong>教务处课表结构采集</strong>
+              <p>用浏览器脚本管理器安装；进入“学生个人课表”后，点击页面右下角“采集课表结构”。</p>
+            </div>
+            <div class="tt-reader-actions">
+              <a class="tt-button tt-button-primary" href="assets/syuct-timetable-capture.user.js" target="_blank" rel="noreferrer">安装采集脚本</a>
+              <a class="tt-button tt-button-secondary" href="https://jws.syuct.edu.cn/" target="_blank" rel="noreferrer">打开本科教务处</a>
+            </div>
+            <small>当前采集版仅生成脱敏 JSON 文件，不会自动上传。请将文件发给开发者完成新课表页面适配。</small>
+          </div>
+
           <div class="tt-source-tabs" role="tablist" aria-label="课表导入方式">
-            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="true" aria-controls="imageSourcePanel">截图识别（推荐）</button>
+            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="true" aria-controls="imageSourcePanel">截图 OCR</button>
+            <button class="tt-source-tab" id="pdfSourceTab" type="button" role="tab" aria-selected="false" aria-controls="pdfSourcePanel">研究生文件</button>
             <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="false" aria-controls="textSourcePanel">网页粘贴</button>
           </div>
 
           <div id="imageSourcePanel" role="tabpanel" aria-labelledby="imageSourceTab">
             <div class="tt-ocr-guide">
-              <strong>手机打开教务处后直接截完整课表，OCR 通常更精准</strong>
-              <span>请保留星期一至星期日、第1至第10节和网格边框。图片只在本机处理，不会上传；首次识别会下载约 6 MB 的 OCR 文件。</span>
+              <strong>截图 OCR 作为旧版课表备用方式</strong>
+              <span>图片必须包含完整星期列、节次和网格边框；首次识别会下载约 6 MB 的 OCR 文件。</span>
             </div>
             <label class="tt-label" for="ocrImageInput">课表截图</label>
             <input id="ocrImageInput" class="tt-file-input" type="file" accept="image/png,image/jpeg,image/webp">
@@ -81,6 +95,24 @@
               <progress id="ocrProgress" max="1" value="0">0%</progress>
             </div>
             <canvas class="tt-ocr-canvas" id="ocrCanvas" hidden aria-label="课表截图与自动定位的网格预览"></canvas>
+          </div>
+
+          <div id="pdfSourcePanel" role="tabpanel" aria-labelledby="pdfSourceTab" hidden>
+            <div class="tt-ocr-guide">
+              <strong>上传研究生系统“打印课表”保存的 PDF</strong>
+              <span>直接读取 PDF 文字与位置，不使用 OCR。请选择系统生成的原始文件，不要上传扫描件。</span>
+            </div>
+            <label class="tt-label" for="graduatePdfInput">研究生课表文件</label>
+            <input id="graduatePdfInput" class="tt-file-input" type="file" accept="application/pdf,.pdf">
+            <p class="tt-file-meta" id="graduatePdfMeta">支持 PDF，最大 20 MB、8 页以内。</p>
+            <div class="tt-actions tt-upload-actions">
+              <button class="tt-button tt-button-primary" id="graduatePdfRecognizeBtn" type="button" disabled>读取研究生课表</button>
+              <a class="tt-button tt-button-secondary" href="https://geims.syuct.edu.cn/" target="_blank" rel="noreferrer">打开研究生教务处</a>
+            </div>
+            <div class="tt-ocr-progress" id="graduatePdfProgressBox" hidden>
+              <div><strong id="graduatePdfProgressLabel">正在准备 PDF</strong><span id="graduatePdfProgressValue">0%</span></div>
+              <progress id="graduatePdfProgress" max="1" value="0">0%</progress>
+            </div>
           </div>
 
           <div id="textSourcePanel" role="tabpanel" aria-labelledby="textSourceTab" hidden>
@@ -125,7 +157,7 @@
             <h3 class="tt-preview-title" id="coursePreviewTitle">课程列表（点击展开修改）</h3>
             <div class="tt-preview" id="coursePreview"></div>
             <details class="tt-ocr-raw" id="ocrRawDetails" hidden>
-              <summary>查看 OCR 分格原文（排查漏识别时使用）</summary>
+              <summary id="rawDetailsSummary">查看识别分格原文</summary>
               <pre id="ocrRawOutput"></pre>
             </details>
             <div class="tt-ocr-review" id="ocrReviewPanel" hidden>
@@ -136,7 +168,7 @@
                   <p>确认前请至少核对课程数量，并检查黄色“需核对”课程。</p>
                 </div>
               </div>
-              <label class="tt-review-check"><input id="ocrReviewConfirm" type="checkbox"> <span>我已对照原图，逐条核对并修正全部课程</span></label>
+              <label class="tt-review-check"><input id="ocrReviewConfirm" type="checkbox"> <span id="reviewConfirmLabel">我已逐条核对并修正全部课程</span></label>
               <p class="tt-review-hint" id="ocrReviewHint">勾选后即可进入第4步，设置学期并生成课表码。</p>
             </div>
           </div>
@@ -186,10 +218,11 @@
 
   <div class="search-overlay" id="searchOverlay"></div>
   <div aria-hidden="true" class="lightbox" id="lightbox"></div>
-  <script defer src="assets/app.js?rev=20260901"></script>
+  <script defer src="assets/app.js?rev=20260906"></script>
   <script defer src="assets/timetable-campus-parser.js?rev=20260818f"></script>
   <script defer src="assets/timetable-codec.js?rev=20260818"></script>
   <script defer src="assets/timetable-ocr.js?rev=20260831-ocr1"></script>
-  <script defer src="assets/timetable-converter.js?rev=20260831-ocr2"></script>
+  <script defer src="assets/timetable-graduate-pdf.js?rev=20260906-import1"></script>
+  <script defer src="assets/timetable-converter.js?rev=20260906-import1"></script>
 </body>
 </html>

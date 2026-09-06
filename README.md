@@ -33,6 +33,8 @@
 ## v260901 更新
 
 - **新增本地课表截图 OCR。** 支持上传正方教务系统完整课表截图，浏览器本地完成 Canvas 预处理、Tesseract.js 中文识别和固定网格解析，再复用现有课程结构生成 `SYUCT-TT2`。
+- **适配新版教务处导入入口。** 新增本科课表结构采集脚本，在已登录的本科教务处页面生成脱敏 JSON 样本，用于后续适配新版课表；脚本不上传账号、Cookie 或课表内容。
+- **新增研究生课表 PDF 导入。** 可单独上传研究生系统“打印课表”生成的原始 PDF，浏览器本地按文字坐标还原星期、节次、周次、教师与完整楼名，核对后生成 `SYUCT-TT2`。
 - **手机端课表转换重新开放并优化流程。** 默认进入截图识别，上传与识别按钮前置；识别结果使用可折叠课程卡，按“上传识别 → 核对修改 → 确认无误 → 设置生成”逐步引导。
 - **保留并优化网页粘贴。** 手机打开教务处后直接截取完整课表，OCR 通常更精准；电脑端教务处的表格排版更适合将整张课表复制到剪贴板并粘贴导入。
 - **课表教程与 PDF.js 维护调整。** 图文 PDF 教程移入“网页粘贴”入口；本地 PDF.js 工作流改为确定性生成和只读校验，不再尝试直接写入受保护的 `main` 分支。
@@ -83,7 +85,7 @@
 - 首页校园实景预览可一键跳转到完整校园相册
 - 首页可显示 GitHub 项目 Star / Fork；由独立脚本读取 GitHub API 并缓存一小时，API 不可用时回退到 `assets/github-stats.json`
 - 校园社区为 GitHub Discussions 的只读镜像，发帖与回复仍在 GitHub 完成
-- 化大课表转换支持原始文本粘贴和课表截图 OCR，两条流程均在浏览器本地完成，课表内容和图片不会上传服务器
+- 化大课表转换支持本科教务处结构采集、研究生课表 PDF、原始文本粘贴和截图 OCR；解析与生成均在浏览器本地完成
 - 图片按显示尺寸提供 WebP 版本，原图保留用于高清查看；站点图标按用途拆分尺寸
 
 ## 项目结构
@@ -113,6 +115,8 @@ SYUCT-web/
 │   ├── community.js / community.css   # 校园社区阅读镜像
 │   ├── community-markdown.js          # 社区正文兜底渲染与 emoji 转换
 │   ├── timetable-*.js / .css          # 化大课表转换解析、编解码与页面逻辑
+│   ├── timetable-graduate-pdf.js       # 研究生课表 PDF 文字坐标解析
+│   ├── syuct-timetable-capture.user.js # 本科新版课表脱敏结构采集脚本
 │   ├── pdf-viewer.js                  # PDF 阅读器入口
 │   ├── pdf-viewer.css                 # PDF 阅读器样式
 │   ├── syuct-community-icon.png       # 学生共创图标原图（各尺寸图标的生成源）
@@ -163,16 +167,23 @@ SYUCT-web/
 
 ```html
 <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-<script defer src="assets/app.js?rev=20260901"></script>
+<script defer src="assets/app.js?rev=20260906"></script>
 ```
 
 `rev` 只用于缓存失效，不代表必须创建新文件。不要重新增加 `app-v129.js`、`styles-v129.css` 这类历史副本。
 
 修改 `styles.css` 或 `app.js` 后，需要把**所有**页面引用的 `rev` 一起更新；否则拿到旧缓存的浏览器可能引用到已经改名或删除的资源。
 
-## 课表截图 OCR
+## 课表导入
 
-`timetable-converter.html` 保留原有“粘贴课表文本”入口，并增加按需加载的截图识别入口：
+`timetable-converter.html` 提供四种入口：
+
+- 本科新版教务处：安装 `syuct-timetable-capture.user.js`，在个人课表页生成脱敏 JSON 样本，供页面结构适配使用；
+- 研究生教务处：上传“打印课表”生成的原始 PDF，PDF.js 在本地读取文字与坐标，再由 `timetable-graduate-pdf.js` 还原课程；
+- 网页粘贴：保留原有完整课表复制、粘贴流程；
+- 截图 OCR：保留为旧版完整课表截图的备用入口。
+
+截图 OCR 的处理流程：
 
 1. Canvas 在本地缩放图片、灰度化与二值化，并检测 8 条等距星期竖线；
 2. 从左侧节次列检测第 1-10 节的 11 条横线，按两节一组建立固定课表网格；
@@ -180,7 +191,7 @@ SYUCT-web/
 4. 根据 OCR 文字坐标和网格位置生成现有课程对象，再复用 `timetable-codec.js` 生成 `SYUCT-TT2`；
 5. OCR 结果以可编辑课程卡展示，必须由用户确认后才能生成课表码。
 
-手机端建议直接打开教务处并截取完整课表，截图比例通常更适合 OCR；电脑端教务处的表格排版更适合将整张课表复制到剪贴板并粘贴导入。首次识别会从本站按需下载约 6 MB 的 OCR 核心与中文模型，浏览器随后会缓存模型。当前版本只接受完整、正向、未裁掉星期日与第 10 节的正方教务系统课表截图；倾斜照片、缺列截图和严重压缩图片会被拒绝或要求人工修正。
+由于新版本科教务处无法在一张截图中显示完整课表，截图 OCR 只作为旧页面备用方式。首次识别会从本站按需下载约 6 MB 的 OCR 核心与中文模型，浏览器随后会缓存模型。研究生 PDF 必须是系统生成、带文字层的原始文件，扫描件不会进入 OCR。
 
 ## 校园社区镜像
 
@@ -255,7 +266,7 @@ Word、Excel 原文件上传到 `docs/` 后，`Build local Office previews` 工�
 目录：/ (root)
 ```
 
-网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。OCR 运行文件已提交到 `assets/tesseract/v7.0.0/`，部署时必须保留该目录。
+网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/syuct-timetable-capture.user.js`。
 
 ## 资料来源与版权
 

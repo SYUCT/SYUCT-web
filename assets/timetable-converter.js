@@ -4,6 +4,7 @@
   const parser = window.SYUCTTimetableParser;
   const codec = window.SYUCTTimetableCodec;
   const ocr = window.SYUCTTimetableOCR;
+  const graduatePdfParser = window.SYUCTGraduateTimetablePDF;
   if (!parser || !codec) return;
 
   const weekdayNames = ['', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日'];
@@ -12,8 +13,10 @@
   const recognizeBtn = document.getElementById('recognizeBtn');
   const textSourceTab = document.getElementById('textSourceTab');
   const imageSourceTab = document.getElementById('imageSourceTab');
+  const pdfSourceTab = document.getElementById('pdfSourceTab');
   const textSourcePanel = document.getElementById('textSourcePanel');
   const imageSourcePanel = document.getElementById('imageSourcePanel');
+  const pdfSourcePanel = document.getElementById('pdfSourcePanel');
   const ocrImageInput = document.getElementById('ocrImageInput');
   const ocrFileMeta = document.getElementById('ocrFileMeta');
   const ocrCanvas = document.getElementById('ocrCanvas');
@@ -22,6 +25,13 @@
   const ocrProgress = document.getElementById('ocrProgress');
   const ocrProgressLabel = document.getElementById('ocrProgressLabel');
   const ocrProgressValue = document.getElementById('ocrProgressValue');
+  const graduatePdfInput = document.getElementById('graduatePdfInput');
+  const graduatePdfMeta = document.getElementById('graduatePdfMeta');
+  const graduatePdfRecognizeBtn = document.getElementById('graduatePdfRecognizeBtn');
+  const graduatePdfProgressBox = document.getElementById('graduatePdfProgressBox');
+  const graduatePdfProgress = document.getElementById('graduatePdfProgress');
+  const graduatePdfProgressLabel = document.getElementById('graduatePdfProgressLabel');
+  const graduatePdfProgressValue = document.getElementById('graduatePdfProgressValue');
   const statusBox = document.getElementById('recognizeStatus');
   const statusTitle = document.getElementById('recognizeStatusTitle');
   const statusMessage = document.getElementById('recognizeStatusMessage');
@@ -39,6 +49,8 @@
   const ocrReviewHint = document.getElementById('ocrReviewHint');
   const ocrRawDetails = document.getElementById('ocrRawDetails');
   const ocrRawOutput = document.getElementById('ocrRawOutput');
+  const rawDetailsSummary = document.getElementById('rawDetailsSummary');
+  const reviewConfirmLabel = document.getElementById('reviewConfirmLabel');
   const previewList = document.getElementById('coursePreview');
   const workflowSteps = Array.from(document.querySelectorAll('[data-workflow-step]'));
   const semesterInput = document.getElementById('semester');
@@ -52,8 +64,11 @@
   let parsedResult = null;
   let clipboardHtml = '';
   let selectedImageFile = null;
+  let selectedGraduatePdfFile = null;
   let sourceMode = 'image';
   let ocrBusy = false;
+  let pdfBusy = false;
+  let pdfJsPromise = null;
 
   const defaultReviewHint = '勾选后即可进入第4步，设置学期并生成课表码。';
 
@@ -105,6 +120,9 @@
     ocrProgressBox.hidden = true;
     ocrProgress.value = 0;
     ocrProgressValue.textContent = '0%';
+    graduatePdfProgressBox.hidden = true;
+    graduatePdfProgress.value = 0;
+    graduatePdfProgressValue.textContent = '0%';
     generateBtn.disabled = true;
     resetGeneratedCode();
     clearStatus();
@@ -113,6 +131,14 @@
 
   function isOcrResult() {
     return Boolean(parsedResult && /^image-ocr/.test(parsedResult.meta.sourceFormat || ''));
+  }
+
+  function isGraduatePdfResult() {
+    return Boolean(parsedResult && /^graduate-pdf/.test(parsedResult.meta.sourceFormat || ''));
+  }
+
+  function requiresReview() {
+    return isOcrResult() || isGraduatePdfResult();
   }
 
   function updateSummary() {
@@ -133,7 +159,7 @@
   function updateGenerateAvailability() {
     const structureReady = Boolean(parsedResult && parsedResult.courses.length
       && parsedResult.meta.sourceLikelyComplete && parsedResult.meta.clipboardStructureValid);
-    const reviewReady = !isOcrResult() || ocrReviewConfirm.checked;
+    const reviewReady = !requiresReview() || ocrReviewConfirm.checked;
     generateBtn.disabled = !(structureReady && reviewReady);
   }
 
@@ -186,13 +212,13 @@
     editor.appendChild(field);
   }
 
-  function invalidateOcrReview(message) {
+  function invalidateReview(message) {
     ocrReviewConfirm.checked = false;
     ocrReviewHint.textContent = message || '内容已修改，请继续核对；全部无误后再勾选确认。';
     setWorkflowStep(3);
     updateGenerateAvailability();
     resetGeneratedCode();
-    if (isOcrResult()) setStatus('warning', '截图 OCR 尚未确认', '识别结果有改动，请继续核对，并在全部无误后重新勾选确认。');
+    if (requiresReview()) setStatus('warning', '识别结果尚未确认', '课程信息有改动，请继续核对，并在全部无误后重新确认。');
   }
 
   function handleOcrEdit(course, field, value) {
@@ -200,7 +226,7 @@
     course[field] = numericFields.has(field) ? Number(value) : value;
     course.ocrEdited = true;
     updateSummary();
-    invalidateOcrReview();
+    invalidateReview();
   }
 
   function renderEditableCourse(item, course, index) {
@@ -259,7 +285,9 @@
     const actions = document.createElement('div');
     actions.className = 'tt-course-editor-actions';
     const confidence = document.createElement('small');
-    confidence.textContent = course.ocrConfidence ? `OCR 置信度约 ${course.ocrConfidence}%` : 'OCR 置信度未知';
+    confidence.textContent = isGraduatePdfResult()
+      ? 'PDF 文字层解析'
+      : (course.ocrConfidence ? `OCR 置信度约 ${course.ocrConfidence}%` : 'OCR 置信度未知');
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'tt-course-remove';
@@ -269,7 +297,7 @@
       parsedResult.courses.forEach((entry, colorIndex) => { entry.colorIndex = colorIndex % 6; });
       updateSummary();
       renderPreview(parsedResult.courses, true);
-      invalidateOcrReview('已删除一条课程，请重新确认剩余课程数量和内容。');
+      invalidateReview('已删除一条课程，请重新确认剩余课程数量和内容。');
     });
     actions.append(confidence, remove);
     editor.appendChild(actions);
@@ -287,10 +315,12 @@
     });
   }
 
-  function renderRawOcr(meta) {
+  function renderRawSource(meta) {
     const cells = Array.isArray(meta.rawCells) ? meta.rawCells : [];
     ocrRawOutput.textContent = cells.map((cell) => {
-      const heading = `${weekdayNames[cell.weekday]} · 第${cell.startSection}-${cell.startSection + 1}节 · 提取${cell.parsedCount}条`;
+      const page = cell.pageNumber ? `第${cell.pageNumber}页 · ` : '';
+      const endSection = cell.endSection || cell.startSection + 1;
+      const heading = `${page}${weekdayNames[cell.weekday]} · 第${cell.startSection}-${endSection}节 · 提取${cell.parsedCount}条`;
       return `${heading}\n${cell.lines.join('\n') || '（未识别到文字）'}`;
     }).join('\n\n');
     ocrRawDetails.hidden = !cells.length;
@@ -305,10 +335,17 @@
     ocrReviewConfirm.checked = false;
     ocrReviewHint.textContent = defaultReviewHint;
     if (editable) {
+      const pdfResult = isGraduatePdfResult();
       resultGuideTitle.textContent = '核对并修改识别结果';
-      resultGuideMessage.textContent = '点击课程卡片展开编辑，对照原图检查课程名、教师、教室、星期、节次和周次。';
+      resultGuideMessage.textContent = pdfResult
+        ? '点击课程卡片展开编辑，核对课程名、教师、教室、星期、节次和周次。'
+        : '点击课程卡片展开编辑，对照原图检查课程名、教师、教室、星期、节次和周次。';
       coursePreviewTitle.textContent = '课程列表（点击展开修改）';
-      renderRawOcr(result.meta);
+      reviewConfirmLabel.textContent = pdfResult
+        ? '我已对照研究生课表，逐条核对并修正全部课程'
+        : '我已对照原图，逐条核对并修正全部课程';
+      rawDetailsSummary.textContent = pdfResult ? '查看 PDF 分格原文' : '查看 OCR 分格原文';
+      renderRawSource(result.meta);
     }
     else {
       resultGuideTitle.textContent = '核对课程预览';
@@ -317,6 +354,8 @@
       ocrRawDetails.hidden = true;
       ocrRawOutput.textContent = '';
     }
+
+    if (result.semester && !semesterInput.value.trim()) semesterInput.value = result.semester;
 
     if (result.meta.practiceNames && result.meta.practiceNames.length) {
       practiceNotice.hidden = false;
@@ -367,13 +406,27 @@
     ocrProgressValue.textContent = `${Math.round(progress * 100)}%`;
   }
 
+  function updateBusyControls() {
+    const busy = ocrBusy || pdfBusy;
+    textSourceTab.disabled = busy;
+    imageSourceTab.disabled = busy || !ocr;
+    pdfSourceTab.disabled = busy || !graduatePdfParser;
+    ocrImageInput.disabled = busy;
+    graduatePdfInput.disabled = busy;
+    ocrRecognizeBtn.disabled = busy || !selectedImageFile;
+    graduatePdfRecognizeBtn.disabled = busy || !selectedGraduatePdfFile;
+    ocrRecognizeBtn.textContent = ocrBusy ? '正在识别…' : '开始识别截图';
+    graduatePdfRecognizeBtn.textContent = pdfBusy ? '正在读取…' : '读取研究生课表';
+  }
+
   function setOcrBusy(busy) {
     ocrBusy = busy;
-    textSourceTab.disabled = busy;
-    imageSourceTab.disabled = busy;
-    ocrImageInput.disabled = busy;
-    ocrRecognizeBtn.disabled = busy || !selectedImageFile;
-    ocrRecognizeBtn.textContent = busy ? '正在识别…' : '开始识别截图';
+    updateBusyControls();
+  }
+
+  function setPdfBusy(busy) {
+    pdfBusy = busy;
+    updateBusyControls();
   }
 
   async function previewImage(file) {
@@ -425,7 +478,7 @@
   }
 
   async function recognizeImage() {
-    if (!selectedImageFile || ocrBusy) return;
+    if (!selectedImageFile || ocrBusy || pdfBusy) return;
     if (!ocr) {
       setStatus('error', '截图识别模块未加载', '请刷新页面后重试；文本粘贴功能仍可正常使用。');
       return;
@@ -455,14 +508,153 @@
     }
   }
 
+  function setGraduatePdfProgress(value, label) {
+    const progress = Math.min(1, Math.max(0, Number(value) || 0));
+    graduatePdfProgressBox.hidden = false;
+    graduatePdfProgress.value = progress;
+    graduatePdfProgress.textContent = `${Math.round(progress * 100)}%`;
+    graduatePdfProgressLabel.textContent = label || '正在读取研究生课表';
+    graduatePdfProgressValue.textContent = `${Math.round(progress * 100)}%`;
+  }
+
+  async function loadLocalPdfJs() {
+    if (!pdfJsPromise) {
+      const moduleUrl = new URL('assets/pdfjs/pdf.min.js?rev=6.2.108-import1', document.baseURI).href;
+      pdfJsPromise = import(moduleUrl).then((pdfjsLib) => {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'assets/pdfjs/pdf.worker.min.js?rev=6.2.108-import1',
+          document.baseURI
+        ).href;
+        return pdfjsLib;
+      }).catch((error) => {
+        pdfJsPromise = null;
+        throw error;
+      });
+    }
+    return pdfJsPromise;
+  }
+
+  async function handleGraduatePdfSelection() {
+    const file = graduatePdfInput.files && graduatePdfInput.files[0];
+    selectedGraduatePdfFile = null;
+    resetRecognition();
+    if (!file) {
+      graduatePdfMeta.textContent = '支持 PDF，最大 20 MB、8 页以内。';
+      updateBusyControls();
+      return;
+    }
+    const pdfType = !file.type || file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+    if (!pdfType || file.size > 20 * 1024 * 1024) {
+      setStatus('error', '文件无法使用', '请选择 20 MB 以内、由研究生系统“打印课表”生成的 PDF。');
+      updateBusyControls();
+      return;
+    }
+    selectedGraduatePdfFile = file;
+    graduatePdfMeta.textContent = `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+    updateBusyControls();
+  }
+
+  async function extractGraduatePdfPages(file) {
+    setGraduatePdfProgress(0.06, '正在读取文件');
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const signature = String.fromCharCode.apply(null, Array.from(bytes.slice(0, 5)));
+    if (signature !== '%PDF-') throw new Error('文件不是有效的 PDF');
+
+    setGraduatePdfProgress(0.12, '正在加载本地 PDF 组件');
+    const pdfjsLib = await loadLocalPdfJs();
+    const loadingTask = pdfjsLib.getDocument({
+      data: bytes,
+      cMapUrl: new URL('assets/pdfjs/cmaps/', document.baseURI).href,
+      cMapPacked: true,
+      iccUrl: new URL('assets/pdfjs/iccs/', document.baseURI).href,
+      standardFontDataUrl: new URL('assets/pdfjs/standard_fonts/', document.baseURI).href,
+      wasmUrl: new URL('assets/pdfjs/wasm/', document.baseURI).href,
+      enableXfa: true,
+      isEvalSupported: false
+    });
+    loadingTask.onProgress = ({ loaded, total }) => {
+      const fraction = total ? loaded / total : 0.5;
+      setGraduatePdfProgress(0.14 + Math.min(1, fraction) * 0.24, '正在解析 PDF');
+    };
+
+    let documentObject;
+    try {
+      documentObject = await loadingTask.promise;
+      if (documentObject.numPages < 1 || documentObject.numPages > 8) {
+        throw new Error('PDF 页数异常，请上传 8 页以内的个人课表');
+      }
+      const pages = [];
+      for (let pageNumber = 1; pageNumber <= documentObject.numPages; pageNumber += 1) {
+        setGraduatePdfProgress(
+          0.4 + ((pageNumber - 1) / documentObject.numPages) * 0.48,
+          `正在读取第 ${pageNumber} / ${documentObject.numPages} 页`
+        );
+        const page = await documentObject.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 1 });
+        const content = await page.getTextContent();
+        pages.push({
+          pageNumber,
+          width: viewport.width,
+          height: viewport.height,
+          items: content.items.map((item) => ({
+            text: item.str,
+            x: item.transform[4],
+            y: item.transform[5],
+            width: item.width,
+            height: item.height
+          }))
+        });
+      }
+      return pages;
+    } finally {
+      if (documentObject) {
+        try { await documentObject.destroy(); } catch (error) {}
+      } else {
+        try { await loadingTask.destroy(); } catch (error) {}
+      }
+    }
+  }
+
+  async function recognizeGraduatePdf() {
+    if (!selectedGraduatePdfFile || pdfBusy || ocrBusy) return;
+    if (!graduatePdfParser) {
+      setStatus('error', '研究生课表模块未加载', '请刷新页面后重试。');
+      return;
+    }
+    resetRecognition();
+    setPdfBusy(true);
+    setGraduatePdfProgress(0.02, '正在准备 PDF');
+    setStatus('warning', '正在本地读取研究生课表', '文件仅在当前浏览器解析，不会上传。');
+    try {
+      const pages = await extractGraduatePdfPages(selectedGraduatePdfFile);
+      setGraduatePdfProgress(0.92, '正在整理课程');
+      const result = graduatePdfParser.parseGraduatePdfPages(pages);
+      setGraduatePdfProgress(1, '研究生课表读取完成');
+      applyParsedResult(result, true);
+      const uncertain = result.meta.uncertainCount || 0;
+      setStatus('warning', '研究生课表已读取，尚未确认', `已从 ${result.meta.pageCount} 页中读取 ${result.meta.arrangementCount} 个上课安排、${result.meta.uniqueCourseCount} 门课程${uncertain ? `，其中 ${uncertain} 条需要重点核对` : ''}。请核对后确认。`);
+    } catch (error) {
+      parsedResult = null;
+      resultPanel.hidden = true;
+      generateBtn.disabled = true;
+      const message = error && error.message ? error.message : '请上传研究生系统“打印课表”生成的原始 PDF。';
+      setStatus('error', '研究生课表读取失败', /PasswordException/i.test(message) ? '暂不支持带密码的 PDF。' : message);
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
   function setSourceMode(mode) {
-    if (ocrBusy || mode === sourceMode) return;
+    if (ocrBusy || pdfBusy || mode === sourceMode) return;
+    if (!['image', 'pdf', 'text'].includes(mode)) return;
     sourceMode = mode;
-    const textActive = mode === 'text';
-    textSourceTab.setAttribute('aria-selected', String(textActive));
-    imageSourceTab.setAttribute('aria-selected', String(!textActive));
-    textSourcePanel.hidden = !textActive;
-    imageSourcePanel.hidden = textActive;
+    const tabs = { image: imageSourceTab, pdf: pdfSourceTab, text: textSourceTab };
+    const panels = { image: imageSourcePanel, pdf: pdfSourcePanel, text: textSourcePanel };
+    Object.keys(tabs).forEach((key) => {
+      const active = key === mode;
+      tabs[key].setAttribute('aria-selected', String(active));
+      panels[key].hidden = !active;
+    });
     resetRecognition();
   }
 
@@ -495,11 +687,11 @@
 
   function generateCode() {
     if (!parsedResult || !parsedResult.meta.sourceLikelyComplete || !parsedResult.meta.clipboardStructureValid) {
-      setStatus('error', '暂不能生成课表码', '请先完成文本或截图识别，并通过完整课表结构校验。');
+      setStatus('error', '暂不能生成课表码', '请先完成课表导入，并通过完整结构校验。');
       return;
     }
-    if (isOcrResult() && !ocrReviewConfirm.checked) {
-      setStatus('warning', '请先核对 OCR 结果', '逐条修改课程信息后，勾选“我已逐条核对并修正下方所有课程”。');
+    if (requiresReview() && !ocrReviewConfirm.checked) {
+      setStatus('warning', '请先核对识别结果', '逐条检查课程信息后，勾选确认项再生成课表码。');
       return;
     }
     try {
@@ -643,19 +835,22 @@
   recognizeBtn.addEventListener('click', recognizeText);
   textSourceTab.addEventListener('click', () => setSourceMode('text'));
   imageSourceTab.addEventListener('click', () => setSourceMode('image'));
+  pdfSourceTab.addEventListener('click', () => setSourceMode('pdf'));
   ocrImageInput.addEventListener('change', handleImageSelection);
   ocrRecognizeBtn.addEventListener('click', recognizeImage);
+  graduatePdfInput.addEventListener('change', handleGraduatePdfSelection);
+  graduatePdfRecognizeBtn.addEventListener('click', recognizeGraduatePdf);
   ocrReviewConfirm.addEventListener('change', () => {
     updateGenerateAvailability();
     resetGeneratedCode();
     if (ocrReviewConfirm.checked) {
       ocrReviewHint.textContent = '已确认。下一步：填写下方学期信息并生成课表码。';
       setWorkflowStep(4);
-      setStatus('success', 'OCR 结果已确认', '现在可以设置学期信息并生成 SYUCT-TT2 课表码。');
-    } else if (isOcrResult()) {
+      setStatus('success', '识别结果已确认', '现在可以设置学期信息并生成 SYUCT-TT2 课表码。');
+    } else if (requiresReview()) {
       ocrReviewHint.textContent = '尚未确认，请逐条核对课程后再次勾选。';
       setWorkflowStep(3);
-      setStatus('warning', '截图 OCR 尚未确认', '请逐条核对课程信息后再次确认。');
+      setStatus('warning', '识别结果尚未确认', '请逐条核对课程信息后再次确认。');
     }
   });
   generateBtn.addEventListener('click', generateCode);
@@ -674,6 +869,11 @@
     imageSourceTab.title = '截图 OCR 模块未加载';
     setSourceMode('text');
   }
+  if (!graduatePdfParser) {
+    pdfSourceTab.disabled = true;
+    pdfSourceTab.title = '研究生课表模块未加载';
+  }
 
+  updateBusyControls();
   setWorkflowStep(1);
 })();

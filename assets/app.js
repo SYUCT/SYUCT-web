@@ -63,7 +63,7 @@ function renderChrome(){
   sidebar.innerHTML = `
     <div class="sidebar-label">SYUCT CAMPUS GUIDE</div>
     <ul class="nav-list">${SITE.nav.map(([url,icon,label])=>`<li><a href="${url}" class="${current===url?'active':''}"><span class="nav-icon"><img src="${icon}" alt="" aria-hidden="true"></span>${label}</a></li>`).join("")}</ul>
-    <div class="sidebar-card"><strong>非官方学生共建站</strong>资料整理至 2026 年 8 月。政策、收费、考试与毕业要求请以学校当年正式通知为准。</div>`;
+    <div class="sidebar-card"><strong>非官方学生共建站</strong>资料整理至 2026 年 9 月。政策、收费、考试与毕业要求请以学校当年正式通知为准。</div>`;
   document.getElementById("menuBtn")?.addEventListener("click",()=>{
     sidebar.classList.toggle("open");
     document.getElementById("backdrop")?.classList.toggle("open");
