@@ -30,6 +30,7 @@
 | `tests/helpers/build-graduate-fixture.py` | 可重建脱敏的两页合成 PDF，运行测试不需要 Python 或 ReportLab。 |
 | `tests/fixtures/mobile-paste/` | 原四个脱敏/合成样本，另加 `graduate.synthetic.pdf`。 |
 | `package.json`、`.gitignore` | 保留仍在使用的导入测试并追加测试，移除已删除功能的专用测试命令；浏览器测试为独立命令，忽略其本地输出。未改依赖、锁文件。 |
+| `.gitattributes` | 仅为剪贴板 TXT 样本保留刻意的空格/Tab 混排，PDF 样本按二进制检查；不改写样本字节，不关闭其他源码的空白检查。 |
 | 旧采集功能清理 | 删除采集脚本及专用测试，移除页面入口、下载响应头配置、测试命令和 README 使用说明；历史文件仍可从 Git 恢复，不影响普通粘贴、PDF 和 OCR。 |
 | `README.md`、本记录及旁边的浏览器结果 JSON | 更新实际入口、限制、验收与部署说明。 |
 
