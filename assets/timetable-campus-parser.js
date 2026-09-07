@@ -1,12 +1,70 @@
 (function (root, factory) {
   'use strict';
-  const api = factory();
+  const mobileParser = typeof module !== 'undefined' && module.exports
+    ? require('./timetable-mobile-text-parser.js') : root.SYUCTMobileTextParser;
+  const api = factory(mobileParser);
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.SYUCTTimetableParser = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (mobileParser) {
   'use strict';
 
   const MAX_COURSES = 200;
+
+  // TT2 supports ranges, not arbitrary sets. Split at every gap; never expand
+  // 1,3 sections into 1-3 or fill missing teaching weeks.
+  function splitRanges(values, step) {
+    const ranges = [];
+    values.forEach((value) => {
+      const previous = ranges[ranges.length - 1];
+      if (previous && value === previous[1] + step) previous[1] = value;
+      else ranges.push([value, value]);
+    });
+    return ranges;
+  }
+
+  function adaptMobileResult(result) {
+    const courses = [];
+    const diagnostics = result.diagnostics.slice();
+    let mappedCount = 0;
+    result.courses.forEach((course) => {
+      const periods = splitRanges(course.periods, 1);
+      const weeks = splitRanges(course.weeks, course.weekMode === 'all' ? 1 : 2);
+      const issues = diagnostics.filter((d) => course.sourceRecords.includes(d.record)).map((d) => d.message);
+      if ([course.name, course.teacher, course.location].some((value) => value.length > 40)) {
+        const message = '小程序课程名、教师、教室各限 40 字，请在预览中缩短后生成。';
+        issues.push(message);
+        diagnostics.push({ severity: 'warning', code: 'CONSUMER_TEXT_LIMIT', message, record: course.sourceRecords[0] });
+      }
+      periods.forEach(([startSection, endSection]) => weeks.forEach(([startWeek, endWeek]) => {
+        mappedCount += 1;
+        if (courses.length >= MAX_COURSES) return;
+        courses.push({
+          name: course.name, teacher: course.teacher, room: course.location,
+          weekday: course.weekday, startSection, endSection, startWeek, endWeek,
+          weekType: course.weekMode, colorIndex: courses.length % 6,
+          courseType: course.courseType, sourceRecords: course.sourceRecords.slice(),
+          reviewIssues: issues.slice()
+        });
+      }));
+    });
+    if (mappedCount > MAX_COURSES) diagnostics.push({ severity: 'error', code: 'TT2_COURSE_LIMIT',
+      message: `拆分后有 ${mappedCount} 条安排，超过课表码 200 条上限；当前仅显示前 200 条，请精简输入后重新识别。` });
+    else if (mappedCount > result.courses.length) diagnostics.push({ severity: 'info', code: 'EXACT_RANGES_SPLIT',
+      message: `为保留离散节次和周次，${result.courses.length} 条原始安排已拆为 ${mappedCount} 条，未补入空缺时间。` });
+    return {
+      courses, diagnostics, sections: result.sections, stats: result.stats, completeness: result.completeness,
+      meta: {
+        sourceFormat: result.format, requiresReview: true, requiresTermConfirmation: true,
+        hasBlockingErrors: diagnostics.some((d) => d.severity === 'error'),
+        timeStructureValid: !result.hasBlockingErrors,
+        sourceLikelyComplete: false, clipboardStructureValid: false,
+        arrangementCount: courses.length, uniqueCourseCount: new Set(courses.map((c) => c.name)).size,
+        oddCount: courses.filter((c) => c.weekType === 'odd').length,
+        evenCount: courses.filter((c) => c.weekType === 'even').length,
+        maxEndWeek: courses.reduce((max, c) => Math.max(max, c.endWeek), 0), practiceNames: []
+      }
+    };
+  }
 
   function cleanText(value) {
     return String(value == null ? '' : value)
@@ -417,6 +475,20 @@
 
   function parseCampusTimetable(text, options) {
     const rawSource = String(text == null ? '' : text).replace(/^\uFEFF/, '');
+    // Dispatch before *any* legacy header/HTML/seven-column validation.
+    if (!mobileParser) throw new Error('手机粘贴解析模块未加载，请刷新页面后重试。');
+    const mobile = mobileParser.parse(rawSource, { maxPeriod: 12, maxWeek: 30 });
+    if (mobile.recognized) {
+      const adapted = adaptMobileResult(mobile);
+      if (adapted.meta.hasBlockingErrors) {
+        const error = new mobileParser.MobileTimetableParseError(Object.assign({}, mobile, {
+          diagnostics: adapted.diagnostics, hasBlockingErrors: adapted.meta.hasBlockingErrors
+        }));
+        error.adaptedResult = adapted;
+        throw error;
+      }
+      return adapted;
+    }
     const source = rawSource.trim();
     const sourceInfo = inspectCampusTimetableSource(rawSource);
     if (!source) throw new Error('没有可识别的课表内容');

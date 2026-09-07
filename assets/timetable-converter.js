@@ -41,6 +41,11 @@
   const oddCount = document.getElementById('oddCount');
   const evenCount = document.getElementById('evenCount');
   const practiceNotice = document.getElementById('practiceNotice');
+  const pasteDiagnostics = document.getElementById('pasteDiagnostics');
+  const pasteStats = document.getElementById('pasteStats');
+  const pasteSections = document.getElementById('pasteSections');
+  const mobileTermPanel = document.getElementById('mobileTermPanel');
+  const mobileTermConfirm = document.getElementById('mobileTermConfirm');
   const resultGuideTitle = document.getElementById('resultGuideTitle');
   const resultGuideMessage = document.getElementById('resultGuideMessage');
   const coursePreviewTitle = document.getElementById('coursePreviewTitle');
@@ -63,9 +68,11 @@
 
   let parsedResult = null;
   let clipboardHtml = '';
+  let clipboardText = '';
+  let recognizedText = null;
   let selectedImageFile = null;
   let selectedGraduatePdfFile = null;
-  let sourceMode = 'image';
+  let sourceMode = 'text';
   let ocrBusy = false;
   let pdfBusy = false;
   let pdfJsPromise = null;
@@ -107,12 +114,21 @@
 
   function resetRecognition() {
     parsedResult = null;
+    recognizedText = null;
     resultPanel.hidden = true;
     previewList.replaceChildren();
     practiceNotice.hidden = true;
     practiceNotice.textContent = '';
+    pasteDiagnostics.replaceChildren();
+    pasteDiagnostics.hidden = true;
+    pasteStats.textContent = '';
+    pasteStats.hidden = true;
+    pasteSections.replaceChildren();
+    mobileTermPanel.hidden = true;
+    mobileTermConfirm.checked = false;
     ocrReviewPanel.hidden = true;
     ocrReviewConfirm.checked = false;
+    ocrReviewConfirm.disabled = false;
     ocrReviewHint.textContent = defaultReviewHint;
     ocrRawDetails.hidden = true;
     ocrRawDetails.open = false;
@@ -137,8 +153,12 @@
     return Boolean(parsedResult && /^graduate-pdf/.test(parsedResult.meta.sourceFormat || ''));
   }
 
+  function isMobileTextResult() {
+    return Boolean(parsedResult && parsedResult.meta.sourceFormat === 'syuct-mobile-explicit-time-v1');
+  }
+
   function requiresReview() {
-    return isOcrResult() || isGraduatePdfResult();
+    return isOcrResult() || isGraduatePdfResult() || isMobileTextResult();
   }
 
   function updateSummary() {
@@ -156,11 +176,18 @@
     evenCount.textContent = String(parsedResult.meta.evenCount);
   }
 
+  function structureIsReady() {
+    if (!parsedResult || !parsedResult.courses.length || parsedResult.meta.hasBlockingErrors) return false;
+    if (recognizedText !== null && recognizedText !== rawInput.value) return false;
+    return isMobileTextResult() ? parsedResult.meta.timeStructureValid
+      : parsedResult.meta.sourceLikelyComplete && parsedResult.meta.clipboardStructureValid;
+  }
+
   function updateGenerateAvailability() {
-    const structureReady = Boolean(parsedResult && parsedResult.courses.length
-      && parsedResult.meta.sourceLikelyComplete && parsedResult.meta.clipboardStructureValid);
+    const structureReady = structureIsReady();
     const reviewReady = !requiresReview() || ocrReviewConfirm.checked;
-    generateBtn.disabled = !(structureReady && reviewReady);
+    const termReady = !isMobileTextResult() || (mobileTermConfirm.checked && semesterInput.value.trim());
+    generateBtn.disabled = !(structureReady && reviewReady && termReady);
   }
 
   function renderStaticCourse(item, course) {
@@ -230,7 +257,7 @@
   }
 
   function renderEditableCourse(item, course, index) {
-    const issues = Array.isArray(course.ocrIssues) ? course.ocrIssues : [];
+    const issues = course.reviewIssues || course.ocrIssues || [];
     item.dataset.ocrWarning = issues.length ? 'true' : 'false';
 
     const summary = document.createElement('summary');
@@ -285,7 +312,9 @@
     const actions = document.createElement('div');
     actions.className = 'tt-course-editor-actions';
     const confidence = document.createElement('small');
-    confidence.textContent = isGraduatePdfResult()
+    confidence.textContent = isMobileTextResult()
+      ? `${course.courseType} · 来源第 ${course.sourceRecords.join('、')} 条`
+      : isGraduatePdfResult()
       ? 'PDF 文字层解析'
       : (course.ocrConfidence ? `OCR 置信度约 ${course.ocrConfidence}%` : 'OCR 置信度未知');
     const remove = document.createElement('button');
@@ -333,15 +362,24 @@
     resultPanel.hidden = false;
     ocrReviewPanel.hidden = !editable;
     ocrReviewConfirm.checked = false;
+    ocrReviewConfirm.disabled = Boolean(result.meta.hasBlockingErrors);
     ocrReviewHint.textContent = defaultReviewHint;
+    mobileTermPanel.hidden = !isMobileTextResult();
+    mobileTermConfirm.checked = false;
+    renderPasteDiagnostics(result);
     if (editable) {
       const pdfResult = isGraduatePdfResult();
+      const mobileResult = isMobileTextResult();
       resultGuideTitle.textContent = '核对并修改识别结果';
-      resultGuideMessage.textContent = pdfResult
+      resultGuideMessage.textContent = mobileResult
+        ? '对照教务系统核对每天安排、单双周和地点。未排课及调停补课信息需单独核对。'
+        : pdfResult
         ? '点击课程卡片展开编辑，核对课程名、教师、教室、星期、节次和周次。'
         : '点击课程卡片展开编辑，对照原图检查课程名、教师、教室、星期、节次和周次。';
       coursePreviewTitle.textContent = '课程列表（点击展开修改）';
-      reviewConfirmLabel.textContent = pdfResult
+      reviewConfirmLabel.textContent = mobileResult
+        ? '我已对照教务系统，核对每天安排、单双周、地点及个人选修课'
+        : pdfResult
         ? '我已对照研究生课表，逐条核对并修正全部课程'
         : '我已对照原图，逐条核对并修正全部课程';
       rawDetailsSummary.textContent = pdfResult ? '查看 PDF 分格原文' : '查看 OCR 分格原文';
@@ -368,11 +406,47 @@
     setWorkflowStep(2);
   }
 
+  function renderPasteDiagnostics(result) {
+    pasteDiagnostics.replaceChildren();
+    pasteSections.replaceChildren();
+    const diagnostics = result.diagnostics || [];
+    pasteDiagnostics.hidden = !diagnostics.length;
+    diagnostics.forEach((entry) => {
+      const line = document.createElement('p');
+      line.dataset.severity = entry.severity;
+      line.dataset.code = entry.code;
+      line.textContent = `${entry.record ? `第 ${entry.record} 条：` : ''}${entry.message}`;
+      pasteDiagnostics.appendChild(line);
+    });
+    pasteStats.hidden = !result.stats;
+    if (result.stats) {
+      const s = result.stats;
+      pasteStats.textContent = `时间标记 ${s.scheduleMarkers} 条 · 已解析 ${s.parsedRecords} 条 · 去重 ${s.duplicateRecords} 条 · 未解决 ${s.unresolvedRecords} 条。解析成功不代表复制完整，请对照教务系统核对。`;
+    }
+    const labels = { unscheduled: '未排课信息', adjustments: '调停补课信息', practice: '实践课信息', internships: '实习课信息' };
+    (result.sections || []).forEach((section) => {
+      const details = document.createElement('details');
+      details.className = 'tt-ocr-raw';
+      const summary = document.createElement('summary');
+      summary.textContent = `${labels[section.kind] || '其他信息'}（未加入课表，请核对）`;
+      const text = document.createElement('pre');
+      text.textContent = section.text + (section.truncated ? '\n（内容过长，剩余信息请回教务系统查看）' : '');
+      details.append(summary, text);
+      pasteSections.appendChild(details);
+    });
+  }
+
   function recognizeText() {
-    resetGeneratedCode();
+    resetRecognition();
     try {
-      const result = parser.parseCampusTimetable(rawInput.value, { html: clipboardHtml });
-      applyParsedResult(result, false);
+      const result = parser.parseCampusTimetable(rawInput.value, { html: rawInput.value === clipboardText ? clipboardHtml : '' });
+      applyParsedResult(result, Boolean(result.meta.requiresReview));
+      recognizedText = rawInput.value;
+
+      if (isMobileTextResult()) {
+        setStatus('warning', '课表已识别，请核对', `已识别 ${result.meta.arrangementCount} 条上课安排，涉及 ${result.meta.uniqueCourseCount} 门课程；已去除 ${result.stats.duplicateRecords} 条重复内容。请核对课程，并确认学期后生成。`);
+        return;
+      }
 
       if (!result.meta.sourceLikelyComplete) {
         setStatus('warning', '识别结果可能不完整', '没有确认复制到晚间课表末尾。请回到校园网页，选择完整课表后重新复制；为避免漏课，当前不允许生成课表码。');
@@ -390,9 +464,12 @@
       setStatus('success', '星期列校验通过', `${structureMessage} 共识别 ${result.meta.arrangementCount} 个上课安排、${result.meta.uniqueCourseCount} 门不同课程，请核对下方预览后再生成。`);
       setWorkflowStep(4);
     } catch (error) {
-      parsedResult = null;
-      resultPanel.hidden = true;
-      generateBtn.disabled = true;
+      resetRecognition();
+      if (error && error.adaptedResult) {
+        applyParsedResult(error.adaptedResult, true);
+        recognizedText = rawInput.value;
+        ocrReviewHint.textContent = '存在未解决问题。请修改上方粘贴原文并重新识别；下方仅展示已解析部分，暂不能生成。';
+      }
       setStatus('error', '没有完成识别', error && error.message ? error.message : '课表格式无法识别，请重新复制完整课表。');
     }
   }
@@ -413,6 +490,8 @@
     pdfSourceTab.disabled = busy || !graduatePdfParser;
     ocrImageInput.disabled = busy;
     graduatePdfInput.disabled = busy;
+    rawInput.disabled = busy;
+    recognizeBtn.disabled = busy;
     ocrRecognizeBtn.disabled = busy || !selectedImageFile;
     graduatePdfRecognizeBtn.disabled = busy || !selectedGraduatePdfFile;
     ocrRecognizeBtn.textContent = ocrBusy ? '正在识别…' : '开始识别截图';
@@ -607,11 +686,8 @@
       }
       return pages;
     } finally {
-      if (documentObject) {
-        try { await documentObject.destroy(); } catch (error) {}
-      } else {
-        try { await loadingTask.destroy(); } catch (error) {}
-      }
+      // PDF.js 6 owns the worker on the loading task, not PDFDocumentProxy.
+      try { await loadingTask.destroy(); } catch (error) {}
     }
   }
 
@@ -648,6 +724,8 @@
     if (ocrBusy || pdfBusy || mode === sourceMode) return;
     if (!['image', 'pdf', 'text'].includes(mode)) return;
     sourceMode = mode;
+    clipboardHtml = '';
+    clipboardText = '';
     const tabs = { image: imageSourceTab, pdf: pdfSourceTab, text: textSourceTab };
     const panels = { image: imageSourcePanel, pdf: pdfSourcePanel, text: textSourcePanel };
     Object.keys(tabs).forEach((key) => {
@@ -672,6 +750,20 @@
   function validateSettings() {
     const totalWeeks = Number(totalWeeksInput.value);
     if (!Number.isInteger(totalWeeks) || totalWeeks < 1 || totalWeeks > 30) throw new Error('学期总周数必须填写 1-30 的整数');
+    if (totalWeeks < parsedResult.meta.maxEndWeek) throw new Error('学期总周数不能小于课程结束周，请核对学期设置');
+    if (isMobileTextResult() && (!semesterInput.value.trim() || !mobileTermConfirm.checked)) {
+      throw new Error('请填写学期名称并确认学期设置');
+    }
+    if (isMobileTextResult() && semesterInput.value.trim().length > 40) {
+      throw new Error('小程序学期名称限 40 字，请缩短后重新确认');
+    }
+    parsedResult.courses.forEach((course, index) => {
+      if (isMobileTextResult() && [course.name, course.teacher, course.room].some((value) => value.length > 40)) {
+        throw new Error(`第 ${index + 1} 条课程名、教师或教室超过小程序 40 字上限，请缩短后重新确认`);
+      }
+      if (course.startWeek === course.endWeek && ((course.weekType === 'odd' && course.startWeek % 2 === 0)
+        || (course.weekType === 'even' && course.startWeek % 2 === 1))) throw new Error(`第 ${index + 1} 条周次与单双周条件没有交集`);
+    });
     const firstWeekDate = String(firstWeekDateInput.value || '').trim();
     if (firstWeekDate) {
       const date = parseDateOnly(firstWeekDate);
@@ -686,7 +778,13 @@
   }
 
   function generateCode() {
-    if (!parsedResult || !parsedResult.meta.sourceLikelyComplete || !parsedResult.meta.clipboardStructureValid) {
+    resetGeneratedCode();
+    if (recognizedText !== null && recognizedText !== rawInput.value) {
+      resetRecognition();
+      setStatus('warning', '粘贴内容已修改', '请重新识别并核对后生成课表码。');
+      return;
+    }
+    if (!structureIsReady()) {
       setStatus('error', '暂不能生成课表码', '请先完成课表导入，并通过完整结构校验。');
       return;
     }
@@ -817,6 +915,9 @@
   initMiniProgramQrDialog();
 
   rawInput.addEventListener('paste', (event) => {
+    clipboardHtml = '';
+    clipboardText = '';
+    resetRecognition();
     const data = event.clipboardData;
     if (!data) return;
     const plainText = data.getData('text/plain');
@@ -824,12 +925,17 @@
 
     // textarea 仍然只展示 text/plain；同时保留同一次网页复制附带的 text/html，
     // 仅用于恢复 table 的 rowspan/colspan 和星期列位置，不上传、不展示。
-    clipboardHtml = data.getData('text/html') || '';
     event.preventDefault();
     const start = rawInput.selectionStart == null ? rawInput.value.length : rawInput.selectionStart;
     const end = rawInput.selectionEnd == null ? start : rawInput.selectionEnd;
+    // HTML describes the pasted fragment only. It is valid for the whole input
+    // only when that fragment replaces the whole input, never for an append/edit.
+    const replacesAll = start === 0 && end === rawInput.value.length;
     rawInput.setRangeText(plainText, start, end, 'end');
-    resetRecognition();
+    if (replacesAll) {
+      clipboardHtml = data.getData('text/html') || '';
+      clipboardText = rawInput.value;
+    }
   });
 
   recognizeBtn.addEventListener('click', recognizeText);
@@ -857,12 +963,19 @@
   copyBtn.addEventListener('click', copyCode);
   rawInput.addEventListener('input', () => {
     clipboardHtml = '';
+    clipboardText = '';
     resetRecognition();
   });
   [semesterInput, firstWeekDateInput, totalWeeksInput].forEach((input) => input.addEventListener('input', () => {
+    mobileTermConfirm.checked = false;
     resetGeneratedCode();
+    updateGenerateAvailability();
     if (!generateBtn.disabled) setWorkflowStep(4);
   }));
+  mobileTermConfirm.addEventListener('change', () => {
+    resetGeneratedCode();
+    updateGenerateAvailability();
+  });
 
   if (!ocr) {
     imageSourceTab.disabled = true;

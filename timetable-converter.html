@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="沈阳化工大学课表本地转换工具：支持本科教务处结构采集、研究生课表 PDF、截图 OCR 和网页粘贴，并生成 SYUCT-TT2 课表码。">
+  <meta name="description" content="沈阳化工大学课表本地转换工具：手机网页粘贴、研究生课表 PDF 和截图 OCR，核对后生成 SYUCT-TT2 课表码。">
   <meta name="theme-color" content="#075ca8">
   <title>化大课表转换 · 沈阳化工大学校园指南（学生共创版）</title>
   <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-  <link href="assets/timetable-converter.css?rev=20260906-import1" rel="stylesheet">
+  <link href="assets/timetable-converter.css?rev=20260908-paste2" rel="stylesheet">
   <link href="assets/favicon-32.png" rel="icon" type="image/png" sizes="32x32">
   <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 </head>
@@ -41,7 +41,7 @@
         <header class="article-header tt-hero">
           <div class="breadcrumb">首页 / 办事大厅 / 化大课表转换</div>
           <h1>化大课表转换</h1>
-          <p class="tt-hero-lead">本科采集课表结构，研究生上传课表 PDF；核对后生成 <strong>SYUCT-TT2</strong> 课表码。</p>
+          <p class="tt-hero-lead">本科复制课表后粘贴，研究生上传课表 PDF；核对后生成 <strong>SYUCT-TT2</strong> 课表码。</p>
         </header>
 
         <section class="tt-section" id="recognize">
@@ -60,26 +60,13 @@
             <li data-workflow-step="4"><b>4</b><span>设置生成</span></li>
           </ol>
 
-          <div class="tt-reader-card">
-            <div class="tt-reader-copy">
-              <span class="tt-method-badge">本科</span>
-              <strong>教务处课表结构采集</strong>
-              <p>普通浏览器不能直接运行，需下载后从用户脚本管理器导入。</p>
-            </div>
-            <div class="tt-reader-actions">
-              <a class="tt-button tt-button-primary" href="assets/syuct-timetable-capture.user.js" download="syuct-timetable-capture.user.js">下载脚本文件</a>
-              <a class="tt-button tt-button-secondary" href="https://jws.syuct.edu.cn/" target="_blank" rel="noreferrer">打开本科教务处</a>
-            </div>
-            <small>导入后打开“学生个人课表”，点击右下角“采集课表结构”；生成的脱敏 JSON 不会自动上传。</small>
-          </div>
-
           <div class="tt-source-tabs" role="tablist" aria-label="课表导入方式">
-            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="true" aria-controls="imageSourcePanel">截图 OCR</button>
+            <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="true" aria-controls="textSourcePanel">网页粘贴</button>
             <button class="tt-source-tab" id="pdfSourceTab" type="button" role="tab" aria-selected="false" aria-controls="pdfSourcePanel">研究生文件</button>
-            <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="false" aria-controls="textSourcePanel">网页粘贴</button>
+            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="false" aria-controls="imageSourcePanel">截图 OCR</button>
           </div>
 
-          <div id="imageSourcePanel" role="tabpanel" aria-labelledby="imageSourceTab">
+          <div id="imageSourcePanel" role="tabpanel" aria-labelledby="imageSourceTab" hidden>
             <div class="tt-ocr-guide">
               <strong>截图 OCR 作为旧版课表备用方式</strong>
               <span>图片必须包含完整星期列、节次和网格边框；首次识别会下载约 6 MB 的 OCR 文件。</span>
@@ -115,8 +102,9 @@
             </div>
           </div>
 
-          <div id="textSourcePanel" role="tabpanel" aria-labelledby="textSourceTab" hidden>
-            <p class="tt-source-help">电脑端教务处的表格排版更适合复制到剪贴板并粘贴导入。请从左上角“时间”拖选到页面右下角；经微信、QQ 转发后会丢失格式，导致星期错位。</p>
+          <div id="textSourcePanel" role="tabpanel" aria-labelledby="textSourceTab">
+            <p class="tt-source-help">在教务处复制完整课表，回到此处长按粘贴。每门课带有“周一第1,2节{第1-13周}”等时间信息即可识别；旧版课表请在电脑端直接复制，保留表格格式。</p>
+            <a href="https://jws.syuct.edu.cn/" target="_blank" rel="noreferrer">打开本科教务处 ↗</a>
             <details class="tt-text-guide">
               <summary>不会复制网页课表？查看图文教程</summary>
               <div class="tt-text-guide-body">
@@ -146,6 +134,9 @@
               <div class="tt-summary-card"><strong id="oddCount">0</strong><span>个单周安排</span></div>
               <div class="tt-summary-card"><strong id="evenCount">0</strong><span>个双周安排</span></div>
             </div>
+            <p class="tt-source-help" id="pasteStats" hidden></p>
+            <div class="tt-paste-diagnostics" id="pasteDiagnostics" hidden aria-label="识别诊断"></div>
+            <div id="pasteSections"></div>
             <div class="tt-practice-notice" id="practiceNotice" hidden></div>
             <div class="tt-next-step">
               <span class="tt-step-kicker">第2步</span>
@@ -197,6 +188,7 @@
               <input id="totalWeeks" class="tt-input" type="number" min="1" max="30" step="1" value="20" inputmode="numeric">
             </div>
           </div>
+          <label class="tt-review-check" id="mobileTermPanel" hidden><input id="mobileTermConfirm" type="checkbox"> <span>我已确认学期名称、总周数和第一周周一日期（日期可留空）</span></label>
           <div class="tt-generate-area" id="share">
             <div class="tt-actions">
               <button class="tt-button tt-button-primary" id="generateBtn" type="button" disabled>生成课表码</button>
@@ -219,10 +211,11 @@
   <div class="search-overlay" id="searchOverlay"></div>
   <div aria-hidden="true" class="lightbox" id="lightbox"></div>
   <script defer src="assets/app.js?rev=20260906"></script>
-  <script defer src="assets/timetable-campus-parser.js?rev=20260818f"></script>
+  <script defer src="assets/timetable-mobile-text-parser.js?rev=20260908-paste2"></script>
+  <script defer src="assets/timetable-campus-parser.js?rev=20260908-paste2"></script>
   <script defer src="assets/timetable-codec.js?rev=20260818"></script>
   <script defer src="assets/timetable-ocr.js?rev=20260831-ocr1"></script>
   <script defer src="assets/timetable-graduate-pdf.js?rev=20260906-import1"></script>
-  <script defer src="assets/timetable-converter.js?rev=20260906-import1"></script>
+  <script defer src="assets/timetable-converter.js?rev=20260908-paste2"></script>
 </body>
 </html>

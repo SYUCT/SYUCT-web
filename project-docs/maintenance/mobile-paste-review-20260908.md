@@ -1,0 +1,139 @@
+# 手机课表粘贴：接入审查与验收
+
+检查日期：2026-09-07 至 2026-09-08。记录下述本地验收结果；2026-09-08 用户另行要求直接发布，并彻底移除课表采集插件功能。最终发布结果以 GitHub 提交、部署记录及主站实际页面为准。站点内容版本仍为 v260901。
+
+## 基线与修复包
+
+- 当前仓库：`SYUCT-web-main`，`main`，基线 `8204399bd75e6aa72c40e4e4715de7f6693f0869`。
+- 发布准备时已快进同步到 `2b76ceb931553ac66e38e6aafcb1542c0f5f5d9e`，保留期间社区自动同步更新，再建立 `codex/mobile-paste-fix` 分支。
+- 开始前仅有无关的未跟踪清理脚本 `.codex_cleanup_redpass_yunshu_hi.sh`；保留不动，不应加入本次提交。
+- 小程序消费者：本地 `syuct-miniprogram`，`46f7ee8687058cfc78a1e5fba03f32b3451c21e6`，只读检查，未修改。
+- 已阅读外部交接文档、包内 README、CODEX_HANDOFF、TEST_REPORT、解析器、测试及独立浏览器验收代码；检查压缩包路径、补丁作用范围，核对 MANIFEST 的文件尺寸与 SHA-256。补丁适用性检查通过。采用人工合并新增文件，不覆盖现有入口。
+- ZIP SHA-256：`fee2b9c8568b47c704961cdf27b3812ffe588096f84408d126751c7071886dd0`。
+- 外部交接文档 SHA-256：`6fffc03c996cd3fa6c67c163ddfbaded6d4128a92e2ff38a52fefdffd0e8703f`。
+- 原四组网站测试基线通过；修复包原 75 项测试基线通过。四个原始样本文件与 ZIP 中字节一致，未改写空格、Tab 或标注结果。
+
+## 实际改动
+
+| 文件 | 作用 |
+| --- | --- |
+| `assets/timetable-mobile-text-parser.js` | 新模块实际加入并复审，版本从包内 1.0.0 调整为 1.0.1；修改见下表。 |
+| `assets/timetable-campus-parser.js` | 在任何旧 HTML/TSV/七列校验之前识别明确时间文本，完成字段适配；旧格式仍走原路径。 |
+| `assets/timetable-converter.js` | 接入可编辑预览、统计、全部诊断、尾部待核对信息及学期确认；重置过期状态，生成前再次检查输入；修复 PDF 工作线程清理。 |
+| `timetable-converter.html` | 默认网页粘贴；保留研究生文件、备用 OCR；按最新要求删除高级采集入口；新增模块先于调用方加载，相关 JS/CSS 更新资源版本。 |
+| `assets/timetable-converter.css` | 增加信息、警告、错误的诊断样式，沿用现有明暗主题。 |
+| `edgeone.json` | 仅对课表转换 HTML 加 `no-cache`；其他资源缓存策略不变。 |
+| `tests/timetable-mobile-text-parser.test.cjs` | 保留包内 75 项独立测试。 |
+| `tests/timetable-mobile-integration.test.cjs` | 19 项适配、协议、错误分流、旧格式、缓存配置与消费者回归。 |
+| `tests/timetable-page.browser.cjs` | 29 项真实 HTTP 页面回归，包括实际 PDF.js、Tesseract 和独立缓存验证。 |
+| `tests/helpers/timetable-fixtures.cjs` | 旧 HTML/TSV 构造器及逐个教学周/节次比较工具。 |
+| `tests/helpers/build-graduate-fixture.py` | 可重建脱敏的两页合成 PDF，运行测试不需要 Python 或 ReportLab。 |
+| `tests/fixtures/mobile-paste/` | 原四个脱敏/合成样本，另加 `graduate.synthetic.pdf`。 |
+| `package.json`、`.gitignore` | 保留仍在使用的导入测试并追加测试，移除已删除功能的专用测试命令；浏览器测试为独立命令，忽略其本地输出。未改依赖、锁文件。 |
+| 旧采集功能清理 | 删除采集脚本及专用测试，移除页面入口、下载响应头配置、测试命令和 README 使用说明；历史文件仍可从 Git 恢复，不影响普通粘贴、PDF 和 OCR。 |
+| `README.md`、本记录及旁边的浏览器结果 JSON | 更新实际入口、限制、验收与部署说明。 |
+
+没有更改 TT2 编解码实现、OCR 网格算法、研究生 PDF 的课程解析规则、论坛、资料页或小程序源码。
+
+## 独立审查发现与修复
+
+| 风险 | 处理 |
+| --- | --- |
+| 只加入新模块，页面仍在七列校验处拒绝 | 在 `parseCampusTimetable` 函数入口分流；即使同次粘贴带有无效 HTML，也优先读取明确时间。 |
+| 新格式解析失败又回退旧七列错误 | 抛出带原始诊断和适配后部分结果的错误；页面展示已解析部分，但禁止生成，不自动回退。 |
+| 取离散集合的最小/最大值导致凭空增加课程时间 | 节次按连续段拆分，周次按普通/奇偶相邻段拆分，再组合；逐个教学周、节次比较 TT2 前后集合。 |
+| 拆分后超过协议 200 条而被静默截断 | 明确阻断，统计实际数量，说明仅预览前 200 条，必须精简原文后重新识别。错误对象与预览均保留阻断标记。 |
+| 第二份课表出现在尾部栏目后被当作备注忽略 | 检测尾部课程时间及重复表头，计入未解决数并阻断。调停补课说明仍只供核对，不擅自应用。 |
+| 新旧时间格式混杂时只导入新格式 | 检出混合格式时阻断，要求分开输入。 |
+| 非法星期没有被识别为待解决记录 | 扩大候选标记捕获，再明确校验星期；避免静默跳过。限定同一行标记，避免误抢旧版星期表头。 |
+| 无数字的陌生地点与下一课程粘连 | 对可检测的运动场、体育馆、中心等歧义明确报错，不把整段当作课程名；任意未知边界仍不能保证恢复。 |
+| 相邻课程被错误合并 | 保留名称、性质、星期、节次集合、周次集合、教师、地点的完整去重条件；补充既有课程性质和景唐楼名称。 |
+| 新粘贴继续使用旧 HTML | 每次 paste/input/切换入口清空快照；只有同次粘贴替换整个输入框时才保留 HTML，追加或局部粘贴不借用片段 HTML 代表整张表。 |
+| 编辑、清空或识别失败仍可生成旧结果 | 清空对象、预览、诊断、确认和输出；生成前比对当前原文与识别快照。课程修改和学期修改分别要求重新确认。 |
+| 消费者静默截短文字 | 根据实际小程序的 40 字限制，对新文本课程名、教师、教室及学期名做生成前检查；原文字不自动截短，提示用户修改。 |
+| 学期设置遮蔽高周次课程 | 不猜测下拉框当前学期；必须填写并确认学期名，总周数不能小于课程结束周；日期沿用可留空、填写时必须为周一的规则。 |
+| 输入被当作 HTML 或泄漏身份头 | 动态课程、诊断、尾部原文使用 textContent/安全 DOM；补充尾部身份头过滤。无输入全文日志、外部 API 或新增存储；并非通用脱敏器。 |
+| PDF.js 6 读取后残留工作线程 | 实际运行发现 PDFDocumentProxy 无 `destroy()`，旧调用错误被吞掉。改由 `loadingTask.destroy()` 清理成功/失败路径；真实 PDF 和重复读取均验证工作线程已结束。 |
+
+## 数据和用户核对约定
+
+- `weekday` 仍为 1=周一、7=周日；`location` 映射 `room`；`periods/weeks` 映射起止段及 `weekType`；新分支约束 1–12 节、1–30 周。
+- `courseType`、`sourceRecords` 只供页面核对；TT2 没有课程性质字段，不扩展协议。未排课及调停补课信息单独展示，不放进课表格子。
+- 单双周按有效周集合表达，例如 1–16 周单周映射为 1–15 周单周，不会增加或减少实际教学周。
+- 样本验收：40 个时间标记 → 成功解析 40 条 → 去重 20 条 → 20 条安排、13 门课程；周一至周日为 5/4/3/5/3/0/0。每门课的名称、性质、星期、节次、周次、教师和地点均比较，不只数条目。
+- 周三大学外语的单双周地点不同、周四同地点单双周、实验课不同节次及周五前后半学期均保留；缺失地点仍为空。未排课区域可见，但未声称自动还原粘连字段。
+- `completeness.verified` 始终为 false；新分支不伪装成七列校验通过。课程数从实际输入计算，不硬编码 20。生成须先核对课程，再确认学期。
+
+## 测试结果
+
+环境：macOS，Node v24.16.0，Chrome 152.0.7977.82；实际仓库页面通过本地 HTTP 加载，不是包内内存验收页。
+
+| 检查 | 结果及范围 |
+| --- | --- |
+| 原有网站测试 | 首轮 converter、OCR、graduate PDF、capture 四组全部通过；随后按用户要求删除 capture 功能和专用测试，其余三组发布前再次通过。原测试的真实小程序解码兼容项通过。 |
+| 新模块及入口集成 | 94/94，通过 75 项原模块测试及 19 项新增集成测试，无跳过。循环内 100 组枚举不另计为独立测试。 |
+| 当前页面 | 29/29，通过真实页面加载、粘贴事件、编辑/失败/重粘、确认、生成及三个入口切换。详细清单见 `mobile-paste-browser-results-20260908.json`。 |
+| HTML/TSV/Markdown | 原表格与合并单元格可用；不完整旧 TSV 仍拒绝。旧表格 Markdown 可用，按星期分段的 Markdown 仍不支持。 |
+| PDF | 合成两页 PDF 实际上传，PDF.js 读取文字坐标，恢复 2 条课程并逐字段验证 TT2；重复读取、坏文件替换、线程清理通过。两页均渲染检查，文字与星期位置正确。 |
+| OCR | 合成 Canvas 完整网格实际上传，经本地 Tesseract 识别、用户确认、TT2 生成；断言课程名、星期、节次和周次。未据此声称低清手机图或地点识别精度达标。 |
+| 小程序消费者 | 调用本地实际 `timetable-codec.js` 和 `timetable-store.js` 的 `parseImportText`，验证 20 条样本和拆成 9 条的离散时间样本，逐字段/时间集合及设置一致。不是微信真机 UI 验收。 |
+| 缓存/资源 | 版本查询参数和脚本顺序检查通过；额外用不启用请求拦截的独立浏览器上下文验证真实 HTTP 缓存复用 JS、HTML 回源。路由拦截测试本身不计作缓存测试。 |
+| 页面错误/隐私 | 最终浏览器运行：页面异常 0，404 等失败响应 0，外部请求 0。主体测试阻断外部网络；独立缓存测试只使用本地合成数据并检查请求记录。 |
+| 布局/静态检查 | 390px、1280px 无横向溢出，明暗主题截图检查；13 个 HTML 页静态审计通过，改动 JS 语法检查及 `git diff --check` 通过。 |
+
+### 复现命令
+
+在仓库根目录运行，原有测试仍全部执行：
+
+```sh
+npm test
+npm run audit:static
+git diff --check
+```
+
+本机消费者也参与测试的实际命令：
+
+```sh
+SYUCT_MINI_CODEC=/Users/hanchuang/syuct-miniprogram/miniprogram/utils/timetable-codec.js \
+SYUCT_MINI_STORE=/Users/hanchuang/syuct-miniprogram/miniprogram/utils/timetable-store.js \
+npm test
+```
+
+未指定消费者路径时，新增的消费者测试会明确跳过，不应报告消费者已验证。
+
+浏览器测试需要可用的 Playwright 和 Chromium。它们仅用于开发测试，不是网站部署依赖；本次复用本机已有运行环境，未修改依赖或锁文件：
+
+```sh
+NODE_PATH=/Users/hanchuang/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules \
+SYUCT_CHROMIUM='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' \
+npm run test:browser
+```
+
+其他环境可使用已有 Playwright 的模块目录和 Chromium 可执行路径，或已有 Playwright 自带浏览器（省略 SYUCT_CHROMIUM）。测试自行启动并关闭本地 HTTP 服务和全新浏览器；默认截图/JSON 输出 `tmp/timetable-browser/`，可用 SYUCT_BROWSER_OUTPUT 改位置。不使用个人浏览器资料或系统剪贴板。
+
+手工本地验收可运行 `python3 -m http.server 8000 --bind 127.0.0.1`，打开 `http://127.0.0.1:8000/timetable-converter.html`；粘贴 `tests/fixtures/mobile-paste/qq-duplicated.anonymized.txt`，核对 20/13/20 后确认课程、填写学期并生成。不要用 file:// 验证 PDF 模块。
+
+## 未验证与已知限制
+
+1. 未在用户真实手机上从教务页长按复制。自动化触发的是 ClipboardEvent/DataTransfer，不能证明 QQ、微信、系统浏览器实际提供的文字、Tab 和 HTML MIME 完全相同。
+2. 未在微信真机界面粘贴导入，已做的是实际小程序消费者代码验证。消费者原有的同课同时间教师合并逻辑未修改；课程性质本来就不属于 TT2 字段。
+3. 未访问学校登录会话、未验证其他学期或学院排版；未知课程名称真实断行、任意无分隔陌生地点、没有复制进来的课程无法保证恢复。
+4. 用户早先给出的私有 PDF 和手机截图临时文件已不可用。本轮使用合成 PDF/图片和包内脱敏文字；实际学校 PDF 的所有布局、扫描 PDF、低清/裁切截图不在本轮精度结论内。PDF 原解析规则未扩展，本轮不声称新增对任意离散周次 PDF 的支持。
+5. 未验证线上 EdgeOne/GitHub Pages 响应、浏览器已保存的旧 HTML、CDN 是否以查询参数区分缓存，也未运行远程 GitHub Actions（其 Node 20 环境不同于本机 Node 24）。未发现相关站点脚本注册 Service Worker；本次没有新增或全站清理缓存逻辑。
+6. 现有 6 页图文 PDF 教程未重新制作，仍以旧网页复制流程为主；新粘贴步骤以页面说明为准。
+
+## 上线步骤（待执行）
+
+1. 检查当前 diff，创建独立 `codex/mobile-paste-fix` 分支；只暂存上方列出的源码、测试、样本和说明，不要 `git add .` 把无关清理脚本加入提交。提交后记录新的提交号及当前生产部署号。
+2. 运行以上测试，通过 PR 审查；在手机上完成一次真实“教务页复制 → 本站长按粘贴 → 核对 → 生成 → 小程序导入”。核对每天的节次、单双周、楼名，以及缺失地点和未排课提示。不同学生不以 20 条作为通用标准。
+3. 通过正常流程合并 main。按现有仓库配置部署完整静态目录：EdgeOne Pages 主站、GitHub Pages 备用站；不需要 build，不覆盖远端未知更新。保留原 PDF.js、Tesseract 和所有课表脚本。
+4. HTML、CSS、mobile/campus/converter JS 同批发布。确认它们在 HTML 中的 rev 为 `20260908-paste2`，mobile 先于 campus，converter 最后。`edgeone.json` 仅控制 EdgeOne；GitHub Pages 不读取该缓存规则。
+5. 在 EdgeOne 清除 `/timetable-converter.html` 的旧 CDN 缓存；确认新页面的 no-cache 响应头及新脚本内容。如 CDN 忽略查询参数，同步清除对应脚本和 CSS 缓存。新响应头不会追溯使用户已经持有的旧页面自动失效。
+6. 在 `www.syuct.top` 和备用站分别验证新页面、404/控制台、强制刷新及再次打开；先用脱敏样本验收，再由用户在自己的手机完成真实数据核对。不要把学生原文上传到公共日志、Issue 或测试报告。
+
+## 回滚步骤（待需要时执行）
+
+1. 优先恢复发布前记录的完整生产部署；或在独立回滚分支 `git revert <本次提交号>`，经审查部署。不使用 reset --hard，不改写 main 历史。
+2. 回滚 HTML、入口、相关样式和缓存引用必须配套，不能只删新解析器却让页面继续调用。
+3. 清除 HTML/CDN 缓存；旧缓存可能仍持有新页面，应在过渡期保留新增 parser 文件，或保证完整页面重新获取并使用新的回滚资源 rev。不要让缓存中的新 HTML 指向已删除模块。
+4. 验证回滚版旧 HTML/TSV、PDF、OCR。回滚后新手机明确时间文本可能再次触发旧七列错误，这是功能撤回，不应通过关闭校验掩盖。
