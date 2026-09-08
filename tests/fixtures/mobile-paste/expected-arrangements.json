@@ -1,0 +1,485 @@
+[
+  {
+    "name": "有机化学AI",
+    "courseType": "必修",
+    "weekday": 1,
+    "periods": [
+      1,
+      2
+    ],
+    "weeks": [
+      1,
+      3,
+      5,
+      7,
+      9,
+      11,
+      13
+    ],
+    "weekMode": "odd",
+    "teacher": "教师甲",
+    "location": "通明楼(原5#教学楼)138"
+  },
+  {
+    "name": "电工学",
+    "courseType": "必修",
+    "weekday": 1,
+    "periods": [
+      1,
+      2
+    ],
+    "weeks": [
+      2,
+      4,
+      6,
+      8,
+      10
+    ],
+    "weekMode": "even",
+    "teacher": "教师乙/教师丙",
+    "location": "通明楼(原5#教学楼)138"
+  },
+  {
+    "name": "分析化学A",
+    "courseType": "必修",
+    "weekday": 2,
+    "periods": [
+      1,
+      2
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "weekMode": "all",
+    "teacher": "教师丁",
+    "location": "敬仲楼(原4#教学楼)127"
+  },
+  {
+    "name": "大学外语III",
+    "courseType": "必修",
+    "weekday": 3,
+    "periods": [
+      1,
+      2
+    ],
+    "weeks": [
+      1,
+      3,
+      5,
+      7,
+      9,
+      11,
+      13,
+      15
+    ],
+    "weekMode": "odd",
+    "teacher": "教师戊",
+    "location": "思远楼(原综合楼)211"
+  },
+  {
+    "name": "大学外语III",
+    "courseType": "必修",
+    "weekday": 3,
+    "periods": [
+      1,
+      2
+    ],
+    "weeks": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16
+    ],
+    "weekMode": "even",
+    "teacher": "教师戊",
+    "location": "瑞师楼(原3#教学楼)117"
+  },
+  {
+    "name": "电工学",
+    "courseType": "必修",
+    "weekday": 4,
+    "periods": [
+      1,
+      2
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "weekMode": "all",
+    "teacher": "教师乙/教师丙",
+    "location": "通明楼(原5#教学楼)138"
+  },
+  {
+    "name": "分析化学实验A",
+    "courseType": "实践",
+    "weekday": 2,
+    "periods": [
+      3,
+      4
+    ],
+    "weeks": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "weekMode": "all",
+    "teacher": "分析教师",
+    "location": "鸣龙楼(原实训楼A座)411"
+  },
+  {
+    "name": "有机化学AI",
+    "courseType": "必修",
+    "weekday": 3,
+    "periods": [
+      3,
+      4
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "weekMode": "all",
+    "teacher": "教师甲",
+    "location": "通明楼(原5#教学楼)138"
+  },
+  {
+    "name": "大学外语III",
+    "courseType": "必修",
+    "weekday": 4,
+    "periods": [
+      3,
+      4
+    ],
+    "weeks": [
+      1,
+      3,
+      5,
+      7,
+      9,
+      11,
+      13,
+      15
+    ],
+    "weekMode": "odd",
+    "teacher": "教师戊",
+    "location": "瑞师楼(原3#教学楼)117"
+  },
+  {
+    "name": "大学外语III",
+    "courseType": "必修",
+    "weekday": 4,
+    "periods": [
+      3,
+      4
+    ],
+    "weeks": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12,
+      14,
+      16
+    ],
+    "weekMode": "even",
+    "teacher": "教师戊",
+    "location": "瑞师楼(原3#教学楼)117"
+  },
+  {
+    "name": "马克思主义基本原理",
+    "courseType": "必修",
+    "weekday": 1,
+    "periods": [
+      5,
+      6
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "weekMode": "all",
+    "teacher": "教师己",
+    "location": "应星楼(原6#教学楼)107"
+  },
+  {
+    "name": "形势与政策",
+    "courseType": "必修",
+    "weekday": 2,
+    "periods": [
+      5,
+      6
+    ],
+    "weeks": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "weekMode": "all",
+    "teacher": "教师庚",
+    "location": "应星楼(原6#教学楼)105"
+  },
+  {
+    "name": "有机化学实验A",
+    "courseType": "实践",
+    "weekday": 4,
+    "periods": [
+      5,
+      6
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "weekMode": "all",
+    "teacher": "有机教师",
+    "location": "鸣龙楼(原实训楼A座)511"
+  },
+  {
+    "name": "线性代数",
+    "courseType": "必修",
+    "weekday": 5,
+    "periods": [
+      5,
+      6
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "weekMode": "all",
+    "teacher": "教师辛",
+    "location": "应星楼(原6#教学楼)304"
+  },
+  {
+    "name": "羽毛球3",
+    "courseType": "必修",
+    "weekday": 1,
+    "periods": [
+      7,
+      8
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "weekMode": "all",
+    "teacher": "教师壬",
+    "location": "羽网中心"
+  },
+  {
+    "name": "马克思主义基本原理",
+    "courseType": "必修",
+    "weekday": 2,
+    "periods": [
+      7,
+      8
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "weekMode": "all",
+    "teacher": "教师己",
+    "location": "敬仲楼(原4#教学楼)223"
+  },
+  {
+    "name": "有机化学实验A",
+    "courseType": "实践",
+    "weekday": 4,
+    "periods": [
+      7,
+      8
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "weekMode": "all",
+    "teacher": "有机教师",
+    "location": "鸣龙楼(原实训楼A座)511"
+  },
+  {
+    "name": "Agent时代：智能体设计与实践",
+    "courseType": "选修",
+    "weekday": 5,
+    "periods": [
+      7,
+      8
+    ],
+    "weeks": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "weekMode": "all",
+    "teacher": "教师癸",
+    "location": "致本楼C座（原6#实验楼）214"
+  },
+  {
+    "name": "工程中力学的创造性思维与方法I",
+    "courseType": "选修",
+    "weekday": 5,
+    "periods": [
+      7,
+      8
+    ],
+    "weeks": [
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "weekMode": "all",
+    "teacher": "教师子",
+    "location": "通明楼(原5#教学楼)203"
+  },
+  {
+    "name": "职业规划与就业指导",
+    "courseType": "课外",
+    "weekday": 1,
+    "periods": [
+      9,
+      10
+    ],
+    "weeks": [
+      6,
+      7
+    ],
+    "weekMode": "all",
+    "teacher": "教师丑",
+    "location": ""
+  }
+]

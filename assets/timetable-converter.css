@@ -67,6 +67,9 @@
 .tt-summary-card strong{display:block;font-size:20px;line-height:1.2;color:var(--primary)}
 .tt-summary-card span{display:block;margin-top:2px;color:var(--muted);font-size:11px}
 .tt-practice-notice{margin:12px 0;padding:11px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 9%,var(--surface));color:var(--text);font-size:12px}
+.tt-paste-diagnostics p{margin:6px 0;padding:9px 12px;border-radius:9px;background:var(--surface-2);font-size:12px;overflow-wrap:anywhere}
+.tt-paste-diagnostics [data-severity="warning"]{background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.tt-paste-diagnostics [data-severity="error"]{border-left:3px solid #c0392b;background:color-mix(in srgb,#c0392b 10%,var(--surface))}
 .tt-next-step{display:flex;align-items:flex-start;gap:10px;margin:14px 0 10px;padding:13px 14px;border-left:4px solid var(--primary);border-radius:11px;background:color-mix(in srgb,var(--primary) 6%,var(--surface))}
 .tt-next-step strong{display:block;font-size:14px}
 .tt-next-step p{margin:2px 0 0;color:var(--muted);font-size:12px;line-height:1.55}

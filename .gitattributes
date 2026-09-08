@@ -1,0 +1,3 @@
+# Preserve clipboard fixture whitespace and treat the generated PDF as binary.
+tests/fixtures/mobile-paste/*.txt whitespace=-space-before-tab
+tests/fixtures/mobile-paste/graduate.synthetic.pdf binary

@@ -33,10 +33,9 @@
 ## v260901 更新
 
 - **新增本地课表截图 OCR。** 支持上传正方教务系统完整课表截图，浏览器本地完成 Canvas 预处理、Tesseract.js 中文识别和固定网格解析，再复用现有课程结构生成 `SYUCT-TT2`。
-- **适配新版教务处导入入口。** 新增本科课表结构采集脚本，在已登录的本科教务处页面生成脱敏 JSON 样本，用于后续适配新版课表；脚本不上传账号、Cookie 或课表内容。
 - **新增研究生课表 PDF 导入。** 可单独上传研究生系统“打印课表”生成的原始 PDF，浏览器本地按文字坐标还原星期、节次、周次、教师与完整楼名，核对后生成 `SYUCT-TT2`。
-- **手机端课表转换重新开放并优化流程。** 默认进入截图识别，上传与识别按钮前置；识别结果使用可折叠课程卡，按“上传识别 → 核对修改 → 确认无误 → 设置生成”逐步引导。
-- **保留并优化网页粘贴。** 手机打开教务处后直接截取完整课表，OCR 通常更精准；电脑端教务处的表格排版更适合将整张课表复制到剪贴板并粘贴导入。
+- **手机课表粘贴接入。** 默认进入网页粘贴；含明确星期、节次和周次的本科课程文字优先解析，不再依赖七列表格。按“粘贴识别 → 核对修改 → 确认课程 → 设置生成”操作。
+- **保留旧版导入。** 旧 HTML/TSV 继续检查七列结构，完整截图 OCR 作为备用；新版课表不能完整截图时，优先复制文字。研究生 PDF 保持独立入口。
 - **课表教程与 PDF.js 维护调整。** 图文 PDF 教程移入“网页粘贴”入口；本地 PDF.js 工作流改为确定性生成和只读校验，不再尝试直接写入受保护的 `main` 分支。
 - **GitHub 统计显示修正。** 首页只保留一套 Star / Fork 更新逻辑，避免实时 API 与旧静态数据互相覆盖；当前静态兜底同步为 11 Star。
 - **文档数量重新核对。** `docs/` 现有 45 份原始文档，其中资料下载中心集中列出 42 份，另有 3 份页面专用文档；Office 本地预览仍为 22 份。
@@ -85,7 +84,7 @@
 - 首页校园实景预览可一键跳转到完整校园相册
 - 首页可显示 GitHub 项目 Star / Fork；由独立脚本读取 GitHub API 并缓存一小时，API 不可用时回退到 `assets/github-stats.json`
 - 校园社区为 GitHub Discussions 的只读镜像，发帖与回复仍在 GitHub 完成
-- 化大课表转换支持本科教务处结构采集、研究生课表 PDF、原始文本粘贴和截图 OCR；解析与生成均在浏览器本地完成
+- 化大课表转换支持本科明确时间文本、旧 HTML/TSV 粘贴、研究生 PDF 和备用截图 OCR；无需安装插件，解析与生成均在浏览器本地完成
 - 图片按显示尺寸提供 WebP 版本，原图保留用于高清查看；站点图标按用途拆分尺寸
 
 ## 项目结构
@@ -115,8 +114,8 @@ SYUCT-web/
 │   ├── community.js / community.css   # 校园社区阅读镜像
 │   ├── community-markdown.js          # 社区正文兜底渲染与 emoji 转换
 │   ├── timetable-*.js / .css          # 化大课表转换解析、编解码与页面逻辑
+│   ├── timetable-mobile-text-parser.js # 本科明确时间文本解析（先于旧七列校验）
 │   ├── timetable-graduate-pdf.js       # 研究生课表 PDF 文字坐标解析
-│   ├── syuct-timetable-capture.user.js # 本科新版课表脱敏结构采集脚本
 │   ├── pdf-viewer.js                  # PDF 阅读器入口
 │   ├── pdf-viewer.css                 # PDF 阅读器样式
 │   ├── syuct-community-icon.png       # 学生共创图标原图（各尺寸图标的生成源）
@@ -176,12 +175,15 @@ SYUCT-web/
 
 ## 课表导入
 
-`timetable-converter.html` 提供四种入口：
+`timetable-converter.html` 提供三种导入入口：
 
-- 本科新版教务处：下载 `syuct-timetable-capture.user.js` 并从用户脚本管理器导入，在个人课表页生成脱敏 JSON 样本，供页面结构适配使用；普通浏览器直接打开脚本文件只会显示源码；
+- 网页粘贴（默认）：本科教务处复制课程文字，在本站长按粘贴。带 `周一第1,2节{第1-13周|单周}` 等明确时间的文字先进入新解析分支，再核对课程与学期并生成课表码；原完整 HTML/TSV 仍走旧表格校验；
 - 研究生教务处：上传“打印课表”生成的原始 PDF，PDF.js 在本地读取文字与坐标，再由 `timetable-graduate-pdf.js` 还原课程；
-- 网页粘贴：保留原有完整课表复制、粘贴流程；
 - 截图 OCR：保留为旧版完整课表截图的备用入口。
+
+新分支展示重复统计、缺失地点、阻断错误及未排课/调停补课原文；离散节次和周次拆分后写入原 `SYUCT-TT2` 协议，不补入空缺时间。解析成功不等于复制完整，用户仍需对照教务系统核对。按星期分段但不带上述明确时间格式的 Markdown 暂不支持。
+
+接入审查、测试边界和发布步骤见 [手机粘贴修复验收记录](project-docs/maintenance/mobile-paste-review-20260908.md)。
 
 截图 OCR 的处理流程：
 
@@ -266,7 +268,7 @@ Word、Excel 原文件上传到 `docs/` 后，`Build local Office previews` 工�
 目录：/ (root)
 ```
 
-网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/syuct-timetable-capture.user.js`。
+网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/timetable-mobile-text-parser.js`。课表页 HTML 与改动脚本必须同批发布；新资源版本参数为 `20260908-paste2`，EdgeOne 对该 HTML 设置 `no-cache`。部署时仍需清除旧页面 CDN 缓存，不能假定新响应头会使已经缓存的旧 HTML 立即失效。
 
 ## 资料来源与版权
 
