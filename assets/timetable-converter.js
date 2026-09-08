@@ -241,11 +241,11 @@
 
   function invalidateReview(message) {
     ocrReviewConfirm.checked = false;
-    ocrReviewHint.textContent = message || '内容已修改，请继续核对；全部无误后再勾选确认。';
+    ocrReviewHint.textContent = message || '内容已修改，请核对后重新确认。';
     setWorkflowStep(3);
     updateGenerateAvailability();
     resetGeneratedCode();
-    if (requiresReview()) setStatus('warning', '识别结果尚未确认', '课程信息有改动，请继续核对，并在全部无误后重新确认。');
+    if (requiresReview()) setStatus('warning', '请重新确认', '课程信息已修改，请核对后重新勾选确认。');
   }
 
   function handleOcrEdit(course, field, value) {
@@ -372,22 +372,22 @@
       const mobileResult = isMobileTextResult();
       resultGuideTitle.textContent = '核对并修改识别结果';
       resultGuideMessage.textContent = mobileResult
-        ? '对照教务系统核对每天安排、单双周和地点。未排课及调停补课信息需单独核对。'
+        ? '展开课程卡片，核对每天安排、单双周和教室。'
         : pdfResult
-        ? '点击课程卡片展开编辑，核对课程名、教师、教室、星期、节次和周次。'
-        : '点击课程卡片展开编辑，对照原图检查课程名、教师、教室、星期、节次和周次。';
+        ? '展开课程卡片，对照 PDF 核对课程、时间和教室。'
+        : '展开课程卡片，对照截图核对课程、时间和教室。';
       coursePreviewTitle.textContent = '课程列表（点击展开修改）';
       reviewConfirmLabel.textContent = mobileResult
-        ? '我已对照教务系统，核对每天安排、单双周、地点及个人选修课'
+        ? '我已核对全部课程、单双周和教室（含个人选修课）'
         : pdfResult
-        ? '我已对照研究生课表，逐条核对并修正全部课程'
-        : '我已对照原图，逐条核对并修正全部课程';
+        ? '我已对照 PDF 核对全部课程、时间和教室'
+        : '我已对照截图核对全部课程、时间和教室';
       rawDetailsSummary.textContent = pdfResult ? '查看 PDF 分格原文' : '查看 OCR 分格原文';
       renderRawSource(result.meta);
     }
     else {
       resultGuideTitle.textContent = '核对课程预览';
-      resultGuideMessage.textContent = '检查课程数量、星期和节次；确认无误后直接进入第4步设置并生成。';
+      resultGuideMessage.textContent = '核对数量、时间和教室，无误后填写下方学期信息。';
       coursePreviewTitle.textContent = '课程预览';
       ocrRawDetails.hidden = true;
       ocrRawOutput.textContent = '';
@@ -444,31 +444,31 @@
       recognizedText = rawInput.value;
 
       if (isMobileTextResult()) {
-        setStatus('warning', '课表已识别，请核对', `已识别 ${result.meta.arrangementCount} 条上课安排，涉及 ${result.meta.uniqueCourseCount} 门课程；已去除 ${result.stats.duplicateRecords} 条重复内容。请核对课程，并确认学期后生成。`);
+        setStatus('warning', '识别完成，下一步核对', `${result.meta.arrangementCount} 条安排、${result.meta.uniqueCourseCount} 门课程，已去重 ${result.stats.duplicateRecords} 条。请检查下方课程。`);
         return;
       }
 
       if (!result.meta.sourceLikelyComplete) {
-        setStatus('warning', '识别结果可能不完整', '没有确认复制到晚间课表末尾。请回到校园网页，选择完整课表后重新复制；为避免漏课，当前不允许生成课表码。');
+        setStatus('warning', '课表可能未复制完整', '请重新选中完整课表（含晚间课程）后粘贴。当前不能生成课表码。');
         return;
       }
 
       if (!result.meta.clipboardStructureValid) {
-        setStatus('warning', '星期列未通过校验', '未检测到校园网页原始纯文本的 7 个星期槽结构。请直接从教务处网页复制完整课表后粘贴，不要经过聊天软件或文档转换；当前不允许生成课表码。');
+        setStatus('warning', '表格结构不完整', '旧格式需保留周一至周日七列。请直接从教务处复制完整表格后粘贴，勿经聊天软件中转。');
         return;
       }
 
       const structureMessage = result.meta.sourceFormat === 'clipboard-html-structure'
-        ? `浏览器剪贴板中的课表表格结构校验通过：已确认周一到周日 ${result.meta.weekdaySlotCount} 列。`
-        : `纯文本课表结构校验通过：${result.meta.validatedSectionRows} 个节次行均还原为周一到周日 ${result.meta.weekdaySlotCount} 个星期槽。`;
-      setStatus('success', '星期列校验通过', `${structureMessage} 共识别 ${result.meta.arrangementCount} 个上课安排、${result.meta.uniqueCourseCount} 门不同课程，请核对下方预览后再生成。`);
+        ? `已确认 ${result.meta.weekdaySlotCount} 个星期列。`
+        : `已确认 ${result.meta.validatedSectionRows} 个节次行、${result.meta.weekdaySlotCount} 个星期列。`;
+      setStatus('success', '识别完成，请核对', `${structureMessage}${result.meta.arrangementCount} 条安排、${result.meta.uniqueCourseCount} 门课程。`);
       setWorkflowStep(4);
     } catch (error) {
       resetRecognition();
       if (error && error.adaptedResult) {
         applyParsedResult(error.adaptedResult, true);
         recognizedText = rawInput.value;
-        ocrReviewHint.textContent = '存在未解决问题。请修改上方粘贴原文并重新识别；下方仅展示已解析部分，暂不能生成。';
+        ocrReviewHint.textContent = '下方仅为已解析部分。请按提示修改粘贴原文并重新识别，暂不能生成。';
       }
       setStatus('error', '没有完成识别', error && error.message ? error.message : '课表格式无法识别，请重新复制完整课表。');
     }
@@ -495,7 +495,7 @@
     ocrRecognizeBtn.disabled = busy || !selectedImageFile;
     graduatePdfRecognizeBtn.disabled = busy || !selectedGraduatePdfFile;
     ocrRecognizeBtn.textContent = ocrBusy ? '正在识别…' : '开始识别截图';
-    graduatePdfRecognizeBtn.textContent = pdfBusy ? '正在读取…' : '读取研究生课表';
+    graduatePdfRecognizeBtn.textContent = pdfBusy ? '正在读取…' : '读取课表文件';
   }
 
   function setOcrBusy(busy) {
@@ -576,7 +576,7 @@
       });
       applyParsedResult(result, true);
       const uncertain = result.meta.uncertainCount || 0;
-      setStatus('warning', '截图 OCR 已完成，尚未确认', `已定位周一至周日 7 列和第1至第10节，提取 ${result.meta.arrangementCount} 个上课安排。其中 ${uncertain} 条含不确定字段，请逐条修改并勾选“我已核对”后再生成课表码。`);
+      setStatus('warning', '识别完成，下一步核对', `${result.meta.arrangementCount} 条安排${uncertain ? `，其中 ${uncertain} 条需重点核对` : ''}。请对照截图检查下方课程。`);
     } catch (error) {
       parsedResult = null;
       resultPanel.hidden = true;
@@ -708,7 +708,7 @@
       setGraduatePdfProgress(1, '研究生课表读取完成');
       applyParsedResult(result, true);
       const uncertain = result.meta.uncertainCount || 0;
-      setStatus('warning', '研究生课表已读取，尚未确认', `已从 ${result.meta.pageCount} 页中读取 ${result.meta.arrangementCount} 个上课安排、${result.meta.uniqueCourseCount} 门课程${uncertain ? `，其中 ${uncertain} 条需要重点核对` : ''}。请核对后确认。`);
+      setStatus('warning', '读取完成，下一步核对', `${result.meta.pageCount} 页课表，${result.meta.arrangementCount} 条安排、${result.meta.uniqueCourseCount} 门课程${uncertain ? `；${uncertain} 条需重点核对` : ''}。请对照 PDF 检查。`);
     } catch (error) {
       parsedResult = null;
       resultPanel.hidden = true;
@@ -799,7 +799,7 @@
       shareCodeOutput.hidden = false;
       copyBtn.disabled = false;
       codeMeta.textContent = `已生成 SYUCT-TT2 · ${parsedResult.courses.length} 个上课安排 · ${code.length} 个字符`;
-      setStatus('success', '课表码已生成', '核对无误后复制完整课表码，通过微信发送，并在 SYUCT-mini 的课表导入功能中粘贴导入。');
+      setStatus('success', '课表码已生成', '复制课表码，返回小程序，选择“导入课表 → 从剪贴板导入课表码”。');
       setWorkflowStep(5);
       shareCodeOutput.focus({ preventScroll: true });
       shareCodeOutput.select();
@@ -950,9 +950,9 @@
     updateGenerateAvailability();
     resetGeneratedCode();
     if (ocrReviewConfirm.checked) {
-      ocrReviewHint.textContent = '已确认。下一步：填写下方学期信息并生成课表码。';
+      ocrReviewHint.textContent = '已确认。下一步填写学期信息并生成课表码。';
       setWorkflowStep(4);
-      setStatus('success', '识别结果已确认', '现在可以设置学期信息并生成 SYUCT-TT2 课表码。');
+      setStatus('success', '课程已确认', '下一步：填写下方学期信息，再生成课表码。');
     } else if (requiresReview()) {
       ocrReviewHint.textContent = '尚未确认，请逐条核对课程后再次勾选。';
       setWorkflowStep(3);

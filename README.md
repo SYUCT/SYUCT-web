@@ -8,7 +8,7 @@
 
 把分散的新生通知、校园地图、学业资料、办事表格和校园经验，整理成一条更容易查找的路径。
 
-**当前版本：v260901** · **45 份站内文档** · **22 份 Office 本地预览** · **4 张实用导航地图** · **1 个官方校园全景** · **12 张校园实景照片**
+**当前版本：v260901** · **44 份站内文档** · **22 份 Office 本地预览** · **4 张实用导航地图** · **1 个官方校园全景** · **12 张校园实景照片**
 
 [访问主站](https://www.syuct.top/) · [GitHub Pages 备用入口](https://syuct.github.io/SYUCT-web/) · [校园社区](https://www.syuct.top/community.html) · [资料下载](https://www.syuct.top/resources.html) · [参与共建](https://www.syuct.top/about.html)
 
@@ -36,14 +36,14 @@
 - **新增研究生课表 PDF 导入。** 可单独上传研究生系统“打印课表”生成的原始 PDF，浏览器本地按文字坐标还原星期、节次、周次、教师与完整楼名，核对后生成 `SYUCT-TT2`。
 - **手机课表粘贴接入。** 默认进入网页粘贴；含明确星期、节次和周次的本科课程文字优先解析，不再依赖七列表格。按“粘贴识别 → 核对修改 → 确认课程 → 设置生成”操作。
 - **保留旧版导入。** 旧 HTML/TSV 继续检查七列结构，完整截图 OCR 作为备用；新版课表不能完整截图时，优先复制文字。研究生 PDF 保持独立入口。
-- **课表教程与 PDF.js 维护调整。** 图文 PDF 教程移入“网页粘贴”入口；本地 PDF.js 工作流改为确定性生成和只读校验，不再尝试直接写入受保护的 `main` 分支。
+- **课表引导更新。** 本科复制课表文字后粘贴，硕士保存教务处课表 PDF 后上传；旧教务处图文教程已移除，暂以页面步骤为准。
+- **PDF.js 维护调整。** 本地 PDF.js 工作流使用确定性生成和只读校验，不再尝试直接写入受保护的 `main` 分支。
 - **GitHub 统计显示修正。** 首页只保留一套 Star / Fork 更新逻辑，避免实时 API 与旧静态数据互相覆盖；当前静态兜底同步为 11 Star。
-- **文档数量重新核对。** `docs/` 现有 45 份原始文档，其中资料下载中心集中列出 42 份，另有 3 份页面专用文档；Office 本地预览仍为 22 份。
+- **文档数量重新核对。** 移除旧课表教程后，`docs/` 现有 44 份原始文档，其中资料下载中心集中列出 42 份，另有 2 份页面专用文档；Office 本地预览仍为 22 份。
 
 ## v260822 更新
 
 - **校园社区阅读镜像。** 新增 `community.html`，每小时同步 GitHub Discussions 的置顶讨论、`精选` 标签讨论与最近讨论，正文直接采用 GitHub 渲染结果，代码块支持一键复制，分类 emoji 转为 Unicode 显示。
-- **化大课表转换教程重构。** 页面小字教程精简为一句话概述加四步流程，完整图文步骤改由 6 页 PDF 承载，可在站内 `pdf-viewer.html` 预览或直接下载。
 - **站点图标按用途拆分尺寸。** `favicon-32.png`（3 KB）用于标签页图标，`apple-touch-icon.png` 用于 iOS 添加到主屏，顶栏品牌图改为 96px WebP；原先各页面直接引用 86 KB 原图。
 - **首页主视觉改用 WebP。** 主视觉是 CSS 背景图且盖有深色渐变，改用 `image-set()` 加载 1280px WebP，单张省约 228 KB，不支持的浏览器回退原 JPG。
 - **课表转换页顶栏内联。** 该页原本是全站唯一依赖 `app.js` 运行时渲染顶栏的页面，首屏需等脚本执行；现与其他页面统一内联。
@@ -84,7 +84,7 @@
 - 首页校园实景预览可一键跳转到完整校园相册
 - 首页可显示 GitHub 项目 Star / Fork；由独立脚本读取 GitHub API 并缓存一小时，API 不可用时回退到 `assets/github-stats.json`
 - 校园社区为 GitHub Discussions 的只读镜像，发帖与回复仍在 GitHub 完成
-- 化大课表转换支持本科明确时间文本、旧 HTML/TSV 粘贴、研究生 PDF 和备用截图 OCR；无需安装插件，解析与生成均在浏览器本地完成
+- 化大课表转换支持本科明确时间文本、旧 HTML/TSV 粘贴、研究生 PDF 和备用截图 OCR；解析与生成均在浏览器本地完成
 - 图片按显示尺寸提供 WebP 版本，原图保留用于高清查看；站点图标按用途拆分尺寸
 
 ## 项目结构
@@ -130,8 +130,7 @@ SYUCT-web/
 │   ├── hero-campus.jpg                # 首页主视觉原图
 │   └── gallery-*.jpg                  # 校园相册图片
 ├── docs/                              # PDF、Word、Excel 等原始资料
-│   ├── previews/                      # Word、Excel 转换后的本地 PDF 预览
-│   └── timetable-converter-guide.pdf  # 化大课表转换图文教程
+│   └── previews/                      # Word、Excel 转换后的本地 PDF 预览
 ├── project-docs/
 │   ├── updates/                       # 各版本更新记录
 │   │   └── README.md                  # 版本索引
@@ -177,9 +176,9 @@ SYUCT-web/
 
 `timetable-converter.html` 提供三种导入入口：
 
-- 网页粘贴（默认）：本科教务处复制课程文字，在本站长按粘贴。带 `周一第1,2节{第1-13周|单周}` 等明确时间的文字先进入新解析分支，再核对课程与学期并生成课表码；原完整 HTML/TSV 仍走旧表格校验；
-- 研究生教务处：上传“打印课表”生成的原始 PDF，PDF.js 在本地读取文字与坐标，再由 `timetable-graduate-pdf.js` 还原课程；
-- 截图 OCR：保留为旧版完整课表截图的备用入口。
+- 本科课表（默认）：本科教务处复制课程文字，在本站长按粘贴。带 `周一第1,2节{第1-13周|单周}` 等明确时间的文字先进入新解析分支，再核对课程与学期并生成课表码；原完整 HTML/TSV 仍走旧表格校验；
+- 硕士课表：上传研究生系统“打印课程表”保存的原始 PDF，PDF.js 在本地读取文字与坐标，再由 `timetable-graduate-pdf.js` 还原课程；
+- 截图备用：仅用于能完整截取的旧版课表。
 
 新分支展示重复统计、缺失地点、阻断错误及未排课/调停补课原文；离散节次和周次拆分后写入原 `SYUCT-TT2` 协议，不补入空缺时间。解析成功不等于复制完整，用户仍需对照教务系统核对。按星期分段但不带上述明确时间格式的 Markdown 暂不支持。
 
@@ -268,7 +267,7 @@ Word、Excel 原文件上传到 `docs/` 后，`Build local Office previews` 工�
 目录：/ (root)
 ```
 
-网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/timetable-mobile-text-parser.js`。课表页 HTML 与改动脚本必须同批发布；新资源版本参数为 `20260908-paste2`，EdgeOne 对该 HTML 设置 `no-cache`。部署时仍需清除旧页面 CDN 缓存，不能假定新响应头会使已经缓存的旧 HTML 立即失效。
+网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/timetable-mobile-text-parser.js`。课表页 HTML 与改动脚本必须同批发布；引导文案的 converter JS/CSS 版本为 `20260908-guide1`，未修改的手机/校园解析器继续使用 `20260908-paste2`。EdgeOne 对该 HTML 设置 `no-cache`。部署时仍需清除旧页面 CDN 缓存，不能假定新响应头会使已经缓存的旧 HTML 立即失效。
 
 ## 资料来源与版权
 

@@ -106,7 +106,7 @@ test('weekday-grouped Markdown remains explicitly unsupported', () => {
 test('resource load order, revisions and page-specific cache policy', () => {
   const html = fs.readFileSync(path.join(__dirname, '../timetable-converter.html'), 'utf8');
   const names = ['timetable-mobile-text-parser.js', 'timetable-campus-parser.js', 'timetable-converter.js'];
-  const positions = names.map((n) => html.indexOf(`assets/${n}?rev=20260908-paste2`));
+  const positions = names.map((n) => html.indexOf(`assets/${n}?rev=${n === 'timetable-converter.js' ? '20260908-guide1' : '20260908-paste2'}`));
   assert.ok(positions.every((p) => p > 0));
   assert.ok(positions[0] < positions[1] && positions[1] < positions[2]);
   const config = require('../edgeone.json');
@@ -114,6 +114,9 @@ test('resource load order, revisions and page-specific cache policy', () => {
   assert.doesNotMatch(html, /userscript|\.user\.js|高级结构采集|用户脚本管理器/i);
   assert.equal(fs.existsSync(path.join(__dirname, '../assets/syuct-timetable-capture.user.js')), false);
   assert.ok(!config.headers.some((h) => /capture\.user/.test(h.source)));
+  assert.doesNotMatch(html, /timetable-converter-guide|图文教程|插件/);
+  assert.equal(fs.existsSync(path.join(__dirname, '../docs/timetable-converter-guide.pdf')), false);
+  for (const text of ['本科课表', '硕士课表', '截图备用', '回到本页长按粘贴', '保存为 PDF']) assert.ok(html.includes(text));
 });
 test('actual mini-program decoder and import normalization (optional local consumer)', { skip: !process.env.SYUCT_MINI_STORE }, () => {
   const store = require(path.resolve(process.env.SYUCT_MINI_STORE));
