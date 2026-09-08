@@ -91,6 +91,42 @@ const server = http.createServer((req, res) => {
       fs.mkdirSync(output, { recursive: true });
       await page.screenshot({ path: path.join(output, 'mobile-import-guide.png'), animations: 'disabled' });
     });
+    await check('undergraduate tutorial is collapsed, tab-scoped, previewable and downloadable', async () => {
+      const guide = page.locator('#undergraduateGuide');
+      assert.equal(await guide.isVisible(), true);
+      assert.equal(await guide.getAttribute('open'), null);
+      assert.equal(requests.some(url => url.includes('timetable-mobile-guide-20260908.pdf')), false);
+      await guide.locator('summary').click();
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      await guide.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: path.join(output, 'mobile-tutorial-entry.png'), animations: 'disabled' });
+      const [viewer] = await Promise.all([page.waitForEvent('popup'), guide.getByText('打开图文教程', { exact: true }).click()]);
+      await viewer.locator('#viewerStage').waitFor({ state: 'visible', timeout: 30000 });
+      assert.equal(await viewer.locator('#pageCount').textContent(), '/ 8');
+      assert.equal(await viewer.locator('#documentTitle').textContent(), '本科课表手机导入指南');
+      await viewer.locator('#nextButton').click();
+      await viewer.waitForFunction(() => document.querySelector('#pageInput').value === '2');
+      await viewer.waitForFunction(() => !document.querySelector('#pageShell').classList.contains('is-rendering'));
+      assert.equal(await viewer.locator('#errorPanel').isHidden(), true);
+      assert.equal(await viewer.evaluate(() => {
+        const canvas = document.querySelector('#pdfCanvas');
+        const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+        let blue = 0;
+        for (let i = 0; i < pixels.length; i += 4) if (pixels[i+2] > pixels[i] + 40 && pixels[i+2] > 100) blue++;
+        return blue > canvas.width * canvas.height * 0.05;
+      }), true, 'tutorial screenshot must actually render, not just load metadata');
+      await viewer.screenshot({ path: path.join(output, 'mobile-tutorial-reader.png'), animations: 'disabled' });
+      await viewer.close();
+      const [download] = await Promise.all([page.waitForEvent('download'), guide.getByText('下载 PDF', { exact: true }).click()]);
+      const downloaded = await download.path();
+      assert.ok(fs.readFileSync(downloaded).equals(fs.readFileSync(path.join(root, 'docs/timetable-mobile-guide-20260908.pdf'))));
+      for (const tab of ['#pdfSourceTab', '#imageSourceTab']) {
+        await page.locator(tab).click();
+        assert.equal(await guide.isVisible(), false);
+      }
+      await page.locator('#textSourceTab').click();
+      await guide.locator('summary').click();
+    });
     await check('40-marker paste produces 20 exact arrangements and 13 course names, ignoring stale HTML', async () => {
       await parse(fixture('qq-duplicated.anonymized.txt'), legacyHtml('不应出现的旧课'));
       assert.equal(await page.locator('.tt-course-card').count(), 20);

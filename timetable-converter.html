@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#075ca8">
   <title>化大课表转换 · 沈阳化工大学校园指南（学生共创版）</title>
   <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-  <link href="assets/timetable-converter.css?rev=20260908-guide1" rel="stylesheet">
+  <link href="assets/timetable-converter.css?rev=20260908-tutorial1" rel="stylesheet">
   <link href="assets/favicon-32.png" rel="icon" type="image/png" sizes="32x32">
   <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 </head>
@@ -110,12 +110,20 @@
             <div class="tt-ocr-guide">
               <strong>本科：复制课表文字后粘贴</strong>
               <ol class="tt-import-steps">
-                <li>登录本科教务处，打开本学期课表。</li>
+                <li>登录本科教务处，进入“信息查询 → 学生个人课表”。</li>
                 <li>选中完整课表并复制，回到本页长按粘贴。</li>
               </ol>
-              <span>请保留课程名称、星期、节次和周次。电脑也可直接复制表格。</span>
+              <span>不要复制首页课表。请保留课程名称、星期、节次和周次；电脑可直接复制完整表格。</span>
               <a href="https://jws.syuct.edu.cn/" target="_blank" rel="noreferrer">打开本科教务处 ↗</a>
             </div>
+            <details class="tt-text-guide" id="undergraduateGuide">
+              <summary>查看本科手机导入教程</summary>
+              <p>8 页图解：复制课表、核对生成、小程序导入。</p>
+              <div class="tt-actions">
+                <a class="tt-button tt-button-primary" href="pdf-viewer.html?file=docs/timetable-mobile-guide-20260908.pdf&amp;title=本科课表手机导入指南" target="_blank" rel="noreferrer">打开图文教程</a>
+                <a class="tt-button tt-button-secondary" href="docs/timetable-mobile-guide-20260908.pdf" download>下载 PDF</a>
+              </div>
+            </details>
             <label class="tt-label" for="rawTimetable">粘贴完整课表</label>
             <textarea id="rawTimetable" class="tt-textarea" spellcheck="false" autocomplete="off" placeholder="长按此处，粘贴从教务处复制的课表……"></textarea>
             <div class="tt-actions">

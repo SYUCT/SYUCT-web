@@ -8,7 +8,7 @@
 
 把分散的新生通知、校园地图、学业资料、办事表格和校园经验，整理成一条更容易查找的路径。
 
-**当前版本：v260901** · **44 份站内文档** · **22 份 Office 本地预览** · **4 张实用导航地图** · **1 个官方校园全景** · **12 张校园实景照片**
+**当前版本：v260901** · **45 份站内文档** · **22 份 Office 本地预览** · **4 张实用导航地图** · **1 个官方校园全景** · **12 张校园实景照片**
 
 [访问主站](https://www.syuct.top/) · [GitHub Pages 备用入口](https://syuct.github.io/SYUCT-web/) · [校园社区](https://www.syuct.top/community.html) · [资料下载](https://www.syuct.top/resources.html) · [参与共建](https://www.syuct.top/about.html)
 
@@ -36,10 +36,10 @@
 - **新增研究生课表 PDF 导入。** 可单独上传研究生系统“打印课表”生成的原始 PDF，浏览器本地按文字坐标还原星期、节次、周次、教师与完整楼名，核对后生成 `SYUCT-TT2`。
 - **手机课表粘贴接入。** 默认进入网页粘贴；含明确星期、节次和周次的本科课程文字优先解析，不再依赖七列表格。按“粘贴识别 → 核对修改 → 确认课程 → 设置生成”操作。
 - **保留旧版导入。** 旧 HTML/TSV 继续检查七列结构，完整截图 OCR 作为备用；新版课表不能完整截图时，优先复制文字。研究生 PDF 保持独立入口。
-- **课表引导更新。** 本科复制课表文字后粘贴，硕士保存教务处课表 PDF 后上传；旧教务处图文教程已移除，暂以页面步骤为准。
+- **课表引导更新。** 本科从“信息查询 → 学生个人课表”复制完整课表，不使用首页摘要；新版 8 页手机图文教程位于本科粘贴区，支持在线预览和下载。硕士仍按页面步骤上传课表 PDF。
 - **PDF.js 维护调整。** 本地 PDF.js 工作流使用确定性生成和只读校验，不再尝试直接写入受保护的 `main` 分支。
 - **GitHub 统计显示修正。** 首页只保留一套 Star / Fork 更新逻辑，避免实时 API 与旧静态数据互相覆盖；当前静态兜底同步为 11 Star。
-- **文档数量重新核对。** 移除旧课表教程后，`docs/` 现有 44 份原始文档，其中资料下载中心集中列出 42 份，另有 2 份页面专用文档；Office 本地预览仍为 22 份。
+- **文档数量重新核对。** 加入新版课表教程后，`docs/` 现有 45 份原始文档，其中资料下载中心集中列出 42 份，另有 3 份页面专用文档；Office 本地预览仍为 22 份。
 
 ## v260822 更新
 
@@ -267,7 +267,7 @@ Word、Excel 原文件上传到 `docs/` 后，`Build local Office previews` 工�
 目录：/ (root)
 ```
 
-网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/timetable-mobile-text-parser.js`。课表页 HTML 与改动脚本必须同批发布；converter JS 版本为 `20260908-optional1`，CSS 保持 `20260908-guide1`，未修改的手机/校园解析器继续使用 `20260908-paste2`。学期名称与开学日期可留空，导入小程序后补填。EdgeOne 对该 HTML 设置 `no-cache`。部署时仍需清除旧页面 CDN 缓存，不能假定新响应头会使已经缓存的旧 HTML 立即失效。
+网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/timetable-mobile-text-parser.js`。课表页 HTML 与改动脚本必须同批发布；converter JS 保持 `20260908-optional1`，CSS 版本为 `20260908-tutorial1`，未修改的手机/校园解析器继续使用 `20260908-paste2`。新版教程使用独立文件 `docs/timetable-mobile-guide-20260908.pdf`，不复用旧教程地址，避免旧 PDF 缓存。学期名称与开学日期可留空，导入小程序后补填。EdgeOne 对该 HTML 设置 `no-cache`。部署时仍需清除旧页面 CDN 缓存，不能假定新响应头会使已经缓存的旧 HTML 立即失效。
 
 ## 资料来源与版权
 

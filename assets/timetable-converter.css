@@ -34,6 +34,11 @@
 .tt-ocr-guide{display:flex;flex-direction:column;gap:2px;margin:0 0 12px;padding:11px 13px;border:1px solid color-mix(in srgb,var(--primary) 28%,var(--border));border-radius:12px;background:color-mix(in srgb,var(--primary) 6%,var(--surface))}
 .tt-ocr-guide strong{font-size:13px}
 .tt-ocr-guide span{color:var(--muted);font-size:11px;line-height:1.55}
+.tt-text-guide{margin:0 0 14px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.tt-text-guide summary{padding:12px 0;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer}
+.tt-text-guide summary:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.tt-text-guide p{margin:0 0 10px;color:var(--muted);font-size:12px}
+.tt-text-guide .tt-actions{margin:0 0 12px;flex-wrap:wrap;gap:8px}
 .tt-file-input{display:block;width:100%;padding:10px;border:1px dashed color-mix(in srgb,var(--primary) 48%,var(--border));border-radius:12px;background:var(--bg);color:var(--text);font:inherit;font-size:13px}
 .tt-file-input::file-selector-button{min-height:34px;margin-right:10px;padding:0 13px;border:0;border-radius:9px;background:var(--primary);color:#fff;font:inherit;font-weight:800;cursor:pointer}
 .tt-file-input:focus{outline:3px solid color-mix(in srgb,var(--primary) 18%,transparent);outline-offset:2px}

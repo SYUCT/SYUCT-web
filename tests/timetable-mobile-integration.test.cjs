@@ -114,8 +114,11 @@ test('resource load order, revisions and page-specific cache policy', () => {
   assert.doesNotMatch(html, /userscript|\.user\.js|高级结构采集|用户脚本管理器/i);
   assert.equal(fs.existsSync(path.join(__dirname, '../assets/syuct-timetable-capture.user.js')), false);
   assert.ok(!config.headers.some((h) => /capture\.user/.test(h.source)));
-  assert.doesNotMatch(html, /timetable-converter-guide|图文教程|插件/);
+  assert.doesNotMatch(html, /timetable-converter-guide|插件/);
   assert.equal(fs.existsSync(path.join(__dirname, '../docs/timetable-converter-guide.pdf')), false);
+  assert.match(html, /id="undergraduateGuide"/);
+  assert.match(html, /timetable-mobile-guide-20260908\.pdf/);
+  assert.ok(fs.readFileSync(path.join(__dirname, '../docs/timetable-mobile-guide-20260908.pdf')).subarray(0, 5).equals(Buffer.from('%PDF-')));
   for (const text of ['本科课表', '硕士课表', '截图备用', '回到本页长按粘贴', '保存为 PDF']) assert.ok(html.includes(text));
 });
 test('actual mini-program decoder and import normalization (optional local consumer)', { skip: !process.env.SYUCT_MINI_STORE }, () => {
