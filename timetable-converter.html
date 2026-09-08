@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#075ca8">
   <title>化大课表转换 · 沈阳化工大学校园指南（学生共创版）</title>
   <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-  <link href="assets/timetable-converter.css?rev=20260908-paste2" rel="stylesheet">
+  <link href="assets/timetable-converter.css?rev=20260908-guide1" rel="stylesheet">
   <link href="assets/favicon-32.png" rel="icon" type="image/png" sizes="32x32">
   <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 </head>
@@ -41,7 +41,7 @@
         <header class="article-header tt-hero">
           <div class="breadcrumb">首页 / 办事大厅 / 化大课表转换</div>
           <h1>化大课表转换</h1>
-          <p class="tt-hero-lead">本科复制课表后粘贴，研究生上传课表 PDF；核对后生成 <strong>SYUCT-TT2</strong> 课表码。</p>
+          <p class="tt-hero-lead">本科粘贴课表，硕士上传 PDF。核对后生成课表码，返回小程序导入。</p>
         </header>
 
         <section class="tt-section" id="recognize">
@@ -49,7 +49,7 @@
             <span class="tt-step-kicker">第1步</span>
             <div>
               <h2>选择导入方式</h2>
-              <p>全部在浏览器本地处理，不上传课表文件或课程信息。</p>
+              <p>仅在当前浏览器处理，课表不会上传。</p>
             </div>
           </div>
 
@@ -61,15 +61,15 @@
           </ol>
 
           <div class="tt-source-tabs" role="tablist" aria-label="课表导入方式">
-            <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="true" aria-controls="textSourcePanel">网页粘贴</button>
-            <button class="tt-source-tab" id="pdfSourceTab" type="button" role="tab" aria-selected="false" aria-controls="pdfSourcePanel">研究生文件</button>
-            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="false" aria-controls="imageSourcePanel">截图 OCR</button>
+            <button class="tt-source-tab" id="textSourceTab" type="button" role="tab" aria-selected="true" aria-controls="textSourcePanel">本科课表</button>
+            <button class="tt-source-tab" id="pdfSourceTab" type="button" role="tab" aria-selected="false" aria-controls="pdfSourcePanel">硕士课表</button>
+            <button class="tt-source-tab" id="imageSourceTab" type="button" role="tab" aria-selected="false" aria-controls="imageSourcePanel">截图备用</button>
           </div>
 
           <div id="imageSourcePanel" role="tabpanel" aria-labelledby="imageSourceTab" hidden>
             <div class="tt-ocr-guide">
-              <strong>截图 OCR 作为旧版课表备用方式</strong>
-              <span>图片必须包含完整星期列、节次和网格边框；首次识别会下载约 6 MB 的 OCR 文件。</span>
+              <strong>仅适用于完整课表截图</strong>
+              <span>需包含周一至周日、全部节次和表格边框。无法截全时，请使用本科粘贴或硕士 PDF。</span>
             </div>
             <label class="tt-label" for="ocrImageInput">课表截图</label>
             <input id="ocrImageInput" class="tt-file-input" type="file" accept="image/png,image/jpeg,image/webp">
@@ -86,14 +86,18 @@
 
           <div id="pdfSourcePanel" role="tabpanel" aria-labelledby="pdfSourceTab" hidden>
             <div class="tt-ocr-guide">
-              <strong>上传研究生系统“打印课表”保存的 PDF</strong>
-              <span>直接读取 PDF 文字与位置，不使用 OCR。请选择系统生成的原始文件，不要上传扫描件。</span>
+              <strong>硕士：保存课表 PDF 后上传</strong>
+              <ol class="tt-import-steps">
+                <li>登录研究生教务处，打开“我的课程表”，选择学期。</li>
+                <li>点击“打印课程表”，保存为 PDF，再回到本页上传。</li>
+              </ol>
+              <span>仅支持系统生成的原始 PDF，不支持扫描件。</span>
             </div>
-            <label class="tt-label" for="graduatePdfInput">研究生课表文件</label>
+            <label class="tt-label" for="graduatePdfInput">硕士课表 PDF</label>
             <input id="graduatePdfInput" class="tt-file-input" type="file" accept="application/pdf,.pdf">
             <p class="tt-file-meta" id="graduatePdfMeta">支持 PDF，最大 20 MB、8 页以内。</p>
             <div class="tt-actions tt-upload-actions">
-              <button class="tt-button tt-button-primary" id="graduatePdfRecognizeBtn" type="button" disabled>读取研究生课表</button>
+              <button class="tt-button tt-button-primary" id="graduatePdfRecognizeBtn" type="button" disabled>读取课表文件</button>
               <a class="tt-button tt-button-secondary" href="https://geims.syuct.edu.cn/" target="_blank" rel="noreferrer">打开研究生教务处</a>
             </div>
             <div class="tt-ocr-progress" id="graduatePdfProgressBox" hidden>
@@ -103,20 +107,17 @@
           </div>
 
           <div id="textSourcePanel" role="tabpanel" aria-labelledby="textSourceTab">
-            <p class="tt-source-help">在教务处复制完整课表，回到此处长按粘贴。每门课带有“周一第1,2节{第1-13周}”等时间信息即可识别；旧版课表请在电脑端直接复制，保留表格格式。</p>
-            <a href="https://jws.syuct.edu.cn/" target="_blank" rel="noreferrer">打开本科教务处 ↗</a>
-            <details class="tt-text-guide">
-              <summary>不会复制网页课表？查看图文教程</summary>
-              <div class="tt-text-guide-body">
-                <p>6 页 PDF，逐步演示从复制课表到小程序导入，并包含常见问题。</p>
-                <div class="tt-guide-actions">
-                  <a class="tt-button tt-button-primary" href="pdf-viewer.html?file=docs/timetable-converter-guide.pdf&amp;title=%E5%8C%96%E5%A4%A7%E8%AF%BE%E8%A1%A8%E8%BD%AC%E6%8D%A2%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E" target="_blank" rel="noreferrer">打开图文教程</a>
-                  <a class="tt-button tt-button-secondary" href="docs/timetable-converter-guide.pdf" download>下载 PDF</a>
-                </div>
-              </div>
-            </details>
-            <label class="tt-label" for="rawTimetable">教务处课表复制内容</label>
-            <textarea id="rawTimetable" class="tt-textarea" spellcheck="false" autocomplete="off" placeholder="在这里粘贴从校园网页复制的完整课表……"></textarea>
+            <div class="tt-ocr-guide">
+              <strong>本科：复制课表文字后粘贴</strong>
+              <ol class="tt-import-steps">
+                <li>登录本科教务处，打开本学期课表。</li>
+                <li>选中完整课表并复制，回到本页长按粘贴。</li>
+              </ol>
+              <span>请保留课程名称、星期、节次和周次。电脑也可直接复制表格。</span>
+              <a href="https://jws.syuct.edu.cn/" target="_blank" rel="noreferrer">打开本科教务处 ↗</a>
+            </div>
+            <label class="tt-label" for="rawTimetable">粘贴完整课表</label>
+            <textarea id="rawTimetable" class="tt-textarea" spellcheck="false" autocomplete="off" placeholder="长按此处，粘贴从教务处复制的课表……"></textarea>
             <div class="tt-actions">
               <button class="tt-button tt-button-primary" id="recognizeBtn" type="button">识别粘贴内容</button>
             </div>
@@ -142,7 +143,7 @@
               <span class="tt-step-kicker">第2步</span>
               <div>
                 <strong id="resultGuideTitle">核对并修改识别结果</strong>
-                <p id="resultGuideMessage">逐条打开课程，对照原图修改课程名、教师、教室、星期、节次和周次。</p>
+                <p id="resultGuideMessage">展开课程卡片，核对课程、时间和教室。</p>
               </div>
             </div>
             <h3 class="tt-preview-title" id="coursePreviewTitle">课程列表（点击展开修改）</h3>
@@ -156,11 +157,11 @@
                 <span class="tt-step-kicker">第3步</span>
                 <div>
                   <strong>确认全部课程无误</strong>
-                  <p>确认前请至少核对课程数量，并检查黄色“需核对”课程。</p>
+                  <p>请对照教务处核对数量、时间和教室，留意“需核对”提示。</p>
                 </div>
               </div>
               <label class="tt-review-check"><input id="ocrReviewConfirm" type="checkbox"> <span id="reviewConfirmLabel">我已逐条核对并修正全部课程</span></label>
-              <p class="tt-review-hint" id="ocrReviewHint">勾选后即可进入第4步，设置学期并生成课表码。</p>
+              <p class="tt-review-hint" id="ocrReviewHint">确认后，填写下方学期信息并生成课表码。</p>
             </div>
           </div>
         </section>
@@ -170,7 +171,7 @@
             <span class="tt-step-kicker">第4步</span>
             <div>
               <h2>设置并生成课表码</h2>
-              <p>第一周周一不确定时可以留空；总周数默认 20 周。</p>
+              <p>填写本学期信息；开学日期不确定时可留空。</p>
             </div>
           </div>
           <div class="tt-settings">
@@ -181,7 +182,7 @@
             <div class="tt-field">
               <label class="tt-label" for="firstWeekDate">第一周的周一</label>
               <input id="firstWeekDate" class="tt-input" type="date">
-              <small>允许为空；填写时需选择星期一。</small>
+              <small>留空时，导入小程序后再设置。</small>
             </div>
             <div class="tt-field">
               <label class="tt-label" for="totalWeeks">学期总周数</label>
@@ -196,7 +197,7 @@
               <span class="tt-code-meta" id="codeMeta"></span>
             </div>
             <textarea id="shareCode" class="tt-textarea tt-code" readonly hidden aria-label="生成的 SYUCT-TT2 课表码"></textarea>
-            <p class="tt-note">复制后可把整段课表码发送到微信，在 SH 小程序的课表导入功能中粘贴。调、停（补）课信息第一版暂不处理。</p>
+            <p class="tt-note">复制课表码，返回小程序，选择“导入课表 → 从剪贴板导入课表码”。调停补课信息请单独核对。</p>
           </div>
         </section>
 
@@ -216,6 +217,6 @@
   <script defer src="assets/timetable-codec.js?rev=20260818"></script>
   <script defer src="assets/timetable-ocr.js?rev=20260831-ocr1"></script>
   <script defer src="assets/timetable-graduate-pdf.js?rev=20260906-import1"></script>
-  <script defer src="assets/timetable-converter.js?rev=20260908-paste2"></script>
+  <script defer src="assets/timetable-converter.js?rev=20260908-guide1"></script>
 </body>
 </html>

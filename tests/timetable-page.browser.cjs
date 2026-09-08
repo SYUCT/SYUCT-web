@@ -79,10 +79,17 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#textSourcePanel').isVisible(), true);
       assert.equal(await page.evaluate(() => typeof SYUCTMobileTextParser.parse), 'function');
       for (const n of ['timetable-mobile-text-parser', 'timetable-campus-parser', 'timetable-converter']) {
-        assert.ok(requests.some((url) => url.endsWith(`${n}.js?rev=20260908-paste2`)));
+        const revision = n === 'timetable-converter' ? '20260908-guide1' : '20260908-paste2';
+        assert.ok(requests.some((url) => url.endsWith(`${n}.js?rev=${revision}`)));
       }
       assert.equal(requests.some((url) => /\/tesseract\/|\/pdfjs\//.test(url)), false);
       assert.equal(await page.locator('#semester').inputValue(), '');
+      assert.equal(await page.locator('#textSourceTab').textContent(), '本科课表');
+      assert.equal(await page.locator('#pdfSourceTab').textContent(), '硕士课表');
+      assert.equal(await page.locator('a[href*="timetable-converter-guide"]').count(), 0);
+      assert.match(await page.locator('#textSourcePanel').textContent(), /回到本页长按粘贴/);
+      fs.mkdirSync(output, { recursive: true });
+      await page.screenshot({ path: path.join(output, 'mobile-import-guide.png'), animations: 'disabled' });
     });
     await check('40-marker paste produces 20 exact arrangements and 13 course names, ignoring stale HTML', async () => {
       await parse(fixture('qq-duplicated.anonymized.txt'), legacyHtml('不应出现的旧课'));
@@ -260,6 +267,9 @@ const server = http.createServer((req, res) => {
       await noCode();
       assert.equal(await page.locator('#pdfSourcePanel').isVisible(), true);
       assert.equal(await page.locator('#mobileTermPanel').isHidden(), true);
+      assert.match(await page.locator('#pdfSourcePanel').textContent(), /保存为 PDF/);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.screenshot({ path: path.join(output, 'mobile-masters-guide.png'), animations: 'disabled' });
     });
     await check('real two-page PDF upload → PDF.js text coordinates → review → TT2', async () => {
       await page.locator('#graduatePdfInput').setInputFiles(path.join(__dirname, 'fixtures/mobile-paste/graduate.synthetic.pdf'));
@@ -353,7 +363,7 @@ const server = http.createServer((req, res) => {
         cachedPage.on('pageerror', (e) => errors.push(e.message));
         cachedPage.on('response', (r) => { if (r.status() >= 400) missing.push(r.url()); });
         const scriptUrls = ['timetable-mobile-text-parser', 'timetable-campus-parser', 'timetable-converter']
-          .map((name) => `/assets/${name}.js?rev=20260908-paste2`);
+          .map((name) => `/assets/${name}.js?rev=${name === 'timetable-converter' ? '20260908-guide1' : '20260908-paste2'}`);
         const count = (url) => served.filter((entry) => entry === url).length;
         await cachedPage.goto(base + '/timetable-converter.html', { waitUntil: 'networkidle' });
         const scriptCounts = scriptUrls.map(count), htmlCount = count('/timetable-converter.html');
