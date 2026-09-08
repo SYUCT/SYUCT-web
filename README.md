@@ -267,7 +267,7 @@ Word、Excel 原文件上传到 `docs/` 后，`Build local Office previews` 工�
 目录：/ (root)
 ```
 
-网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/timetable-mobile-text-parser.js`。课表页 HTML 与改动脚本必须同批发布；引导文案的 converter JS/CSS 版本为 `20260908-guide1`，未修改的手机/校园解析器继续使用 `20260908-paste2`。EdgeOne 对该 HTML 设置 `no-cache`。部署时仍需清除旧页面 CDN 缓存，不能假定新响应头会使已经缓存的旧 HTML 立即失效。
+网站不需要执行 `npm run build`。`package.json` 主要用于固定和维护本地 PDF.js 与运行回归测试；Office 预览由独立 GitHub Actions 工作流生成。部署时需保留 `assets/pdfjs/`、`assets/tesseract/v7.0.0/`、`assets/timetable-graduate-pdf.js` 和 `assets/timetable-mobile-text-parser.js`。课表页 HTML 与改动脚本必须同批发布；converter JS 版本为 `20260908-optional1`，CSS 保持 `20260908-guide1`，未修改的手机/校园解析器继续使用 `20260908-paste2`。学期名称与开学日期可留空，导入小程序后补填。EdgeOne 对该 HTML 设置 `no-cache`。部署时仍需清除旧页面 CDN 缓存，不能假定新响应头会使已经缓存的旧 HTML 立即失效。
 
 ## 资料来源与版权
 

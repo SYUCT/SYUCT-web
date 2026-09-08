@@ -161,7 +161,7 @@
                 </div>
               </div>
               <label class="tt-review-check"><input id="ocrReviewConfirm" type="checkbox"> <span id="reviewConfirmLabel">我已逐条核对并修正全部课程</span></label>
-              <p class="tt-review-hint" id="ocrReviewHint">确认后，填写下方学期信息并生成课表码。</p>
+              <p class="tt-review-hint" id="ocrReviewHint">确认后，核对下方总周数并生成课表码。</p>
             </div>
           </div>
         </section>
@@ -171,16 +171,16 @@
             <span class="tt-step-kicker">第4步</span>
             <div>
               <h2>设置并生成课表码</h2>
-              <p>填写本学期信息；开学日期不确定时可留空。</p>
+              <p>学期名称和开学日期可留空，导入小程序后补填。</p>
             </div>
           </div>
           <div class="tt-settings">
             <div class="tt-field">
-              <label class="tt-label" for="semester">学期名称</label>
+              <label class="tt-label" for="semester">学期名称（选填）</label>
               <input id="semester" class="tt-input" type="text" maxlength="80" placeholder="例如：2026-2027 学年第1学期">
             </div>
             <div class="tt-field">
-              <label class="tt-label" for="firstWeekDate">第一周的周一</label>
+              <label class="tt-label" for="firstWeekDate">第一周的周一（选填）</label>
               <input id="firstWeekDate" class="tt-input" type="date">
               <small>留空时，导入小程序后再设置。</small>
             </div>
@@ -189,7 +189,7 @@
               <input id="totalWeeks" class="tt-input" type="number" min="1" max="30" step="1" value="20" inputmode="numeric">
             </div>
           </div>
-          <label class="tt-review-check" id="mobileTermPanel" hidden><input id="mobileTermConfirm" type="checkbox"> <span>我已确认学期名称、总周数和第一周周一日期（日期可留空）</span></label>
+          <label class="tt-review-check" id="mobileTermPanel" hidden><input id="mobileTermConfirm" type="checkbox"> <span>我已核对学期总周数及已填写的信息</span></label>
           <div class="tt-generate-area" id="share">
             <div class="tt-actions">
               <button class="tt-button tt-button-primary" id="generateBtn" type="button" disabled>生成课表码</button>
@@ -217,6 +217,6 @@
   <script defer src="assets/timetable-codec.js?rev=20260818"></script>
   <script defer src="assets/timetable-ocr.js?rev=20260831-ocr1"></script>
   <script defer src="assets/timetable-graduate-pdf.js?rev=20260906-import1"></script>
-  <script defer src="assets/timetable-converter.js?rev=20260908-guide1"></script>
+  <script defer src="assets/timetable-converter.js?rev=20260908-optional1"></script>
 </body>
 </html>

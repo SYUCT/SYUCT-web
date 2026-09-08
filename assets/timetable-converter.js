@@ -186,7 +186,7 @@
   function updateGenerateAvailability() {
     const structureReady = structureIsReady();
     const reviewReady = !requiresReview() || ocrReviewConfirm.checked;
-    const termReady = !isMobileTextResult() || (mobileTermConfirm.checked && semesterInput.value.trim());
+    const termReady = !isMobileTextResult() || mobileTermConfirm.checked;
     generateBtn.disabled = !(structureReady && reviewReady && termReady);
   }
 
@@ -387,7 +387,7 @@
     }
     else {
       resultGuideTitle.textContent = '核对课程预览';
-      resultGuideMessage.textContent = '核对数量、时间和教室，无误后填写下方学期信息。';
+      resultGuideMessage.textContent = '核对数量、时间和教室，无误后确认总周数并生成课表码。';
       coursePreviewTitle.textContent = '课程预览';
       ocrRawDetails.hidden = true;
       ocrRawOutput.textContent = '';
@@ -751,8 +751,8 @@
     const totalWeeks = Number(totalWeeksInput.value);
     if (!Number.isInteger(totalWeeks) || totalWeeks < 1 || totalWeeks > 30) throw new Error('学期总周数必须填写 1-30 的整数');
     if (totalWeeks < parsedResult.meta.maxEndWeek) throw new Error('学期总周数不能小于课程结束周，请核对学期设置');
-    if (isMobileTextResult() && (!semesterInput.value.trim() || !mobileTermConfirm.checked)) {
-      throw new Error('请填写学期名称并确认学期设置');
+    if (isMobileTextResult() && !mobileTermConfirm.checked) {
+      throw new Error('请核对并确认学期总周数');
     }
     if (isMobileTextResult() && semesterInput.value.trim().length > 40) {
       throw new Error('小程序学期名称限 40 字，请缩短后重新确认');
@@ -950,9 +950,9 @@
     updateGenerateAvailability();
     resetGeneratedCode();
     if (ocrReviewConfirm.checked) {
-      ocrReviewHint.textContent = '已确认。下一步填写学期信息并生成课表码。';
+      ocrReviewHint.textContent = '已确认。下一步确认总周数并生成课表码。';
       setWorkflowStep(4);
-      setStatus('success', '课程已确认', '下一步：填写下方学期信息，再生成课表码。');
+      setStatus('success', '课程已确认', '下一步：确认总周数并生成课表码。学期名称和开学日期可在小程序补填。');
     } else if (requiresReview()) {
       ocrReviewHint.textContent = '尚未确认，请逐条核对课程后再次勾选。';
       setWorkflowStep(3);

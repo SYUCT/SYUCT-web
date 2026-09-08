@@ -79,7 +79,7 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#textSourcePanel').isVisible(), true);
       assert.equal(await page.evaluate(() => typeof SYUCTMobileTextParser.parse), 'function');
       for (const n of ['timetable-mobile-text-parser', 'timetable-campus-parser', 'timetable-converter']) {
-        const revision = n === 'timetable-converter' ? '20260908-guide1' : '20260908-paste2';
+        const revision = n === 'timetable-converter' ? '20260908-optional1' : '20260908-paste2';
         assert.ok(requests.some((url) => url.endsWith(`${n}.js?rev=${revision}`)));
       }
       assert.equal(requests.some((url) => /\/tesseract\/|\/pdfjs\//.test(url)), false);
@@ -120,6 +120,16 @@ const server = http.createServer((req, res) => {
       await page.screenshot({ path: path.join(output, 'mobile-dark.png'), animations: 'disabled' });
       await page.evaluate(() => { document.documentElement.dataset.theme = 'light'; });
     });
+    await check('blank semester and date generate TT2 after both confirmations', async () => {
+      await page.locator('#mobileTermConfirm').check();
+      await noCode();
+      await page.locator('#ocrReviewConfirm').check();
+      const result = await decoded();
+      assert.deepEqual(result.settings, { semester: '', firstWeekDate: '', totalWeeks: 20 });
+      assert.deepEqual(expand(result.courses), expandExpected(expected));
+      await page.locator('#mobileTermConfirm').uncheck();
+      await noCode();
+    });
     await check('course and term confirmations required; exact generated TT2 matches golden data', async () => {
       await page.locator('#ocrReviewConfirm').check();
       assert.equal(await page.locator('#generateBtn').isDisabled(), true);
@@ -141,6 +151,12 @@ const server = http.createServer((req, res) => {
       assert.equal(await page.locator('#mobileTermConfirm').isChecked(), false);
       await page.locator('#mobileTermConfirm').check();
       assert.equal((await decoded()).settings.semester, '2027-2028 学年第1学期');
+    });
+    await check('clearing a previously filled semester does not reuse it or block generation', async () => {
+      await page.locator('#semester').fill('');
+      await noCode();
+      await page.locator('#mobileTermConfirm').check();
+      assert.deepEqual((await decoded()).settings, { semester: '', firstWeekDate: '', totalWeeks: 20 });
     });
     await check('plain-text re-paste clears previous HTML and confirmation', async () => {
       await parse(legacyTsv(), legacyHtml('HTML课程'));
@@ -363,7 +379,7 @@ const server = http.createServer((req, res) => {
         cachedPage.on('pageerror', (e) => errors.push(e.message));
         cachedPage.on('response', (r) => { if (r.status() >= 400) missing.push(r.url()); });
         const scriptUrls = ['timetable-mobile-text-parser', 'timetable-campus-parser', 'timetable-converter']
-          .map((name) => `/assets/${name}.js?rev=${name === 'timetable-converter' ? '20260908-guide1' : '20260908-paste2'}`);
+          .map((name) => `/assets/${name}.js?rev=${name === 'timetable-converter' ? '20260908-optional1' : '20260908-paste2'}`);
         const count = (url) => served.filter((entry) => entry === url).length;
         await cachedPage.goto(base + '/timetable-converter.html', { waitUntil: 'networkidle' });
         const scriptCounts = scriptUrls.map(count), htmlCount = count('/timetable-converter.html');
