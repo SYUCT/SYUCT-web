@@ -106,7 +106,7 @@ test('weekday-grouped Markdown remains explicitly unsupported', () => {
 test('resource load order, revisions and page-specific cache policy', () => {
   const html = fs.readFileSync(path.join(__dirname, '../timetable-converter.html'), 'utf8');
   const names = ['timetable-mobile-text-parser.js', 'timetable-campus-parser.js', 'timetable-converter.js'];
-  const positions = names.map((n) => html.indexOf(`assets/${n}?rev=${n === 'timetable-converter.js' ? '20260908-guide1' : '20260908-paste2'}`));
+  const positions = names.map((n) => html.indexOf(`assets/${n}?rev=${n === 'timetable-converter.js' ? '20260908-optional1' : '20260908-paste2'}`));
   assert.ok(positions.every((p) => p > 0));
   assert.ok(positions[0] < positions[1] && positions[1] < positions[2]);
   const config = require('../edgeone.json');
@@ -129,5 +129,13 @@ test('actual mini-program decoder and import normalization (optional local consu
     assert.equal(imported.courses.length, r.courses.length);
     assert.deepEqual(expand(imported.courses), expand(r.courses));
     assert.deepEqual(imported.settings, settings);
+    const optionalSettings = { semester: '', firstWeekDate: '', totalWeeks: 20 };
+    const optionalCode = codec.encodeShareCode({ settings: optionalSettings, courses: r.courses });
+    assert.deepEqual(miniCodec.decodeShareCode(optionalCode).settings, optionalSettings);
+    const optionalImport = store.parseImportText(optionalCode);
+    assert.deepEqual(expand(optionalImport.courses), expand(r.courses));
+    assert.deepEqual(optionalImport.settings, {
+      ...optionalSettings, semester: store.defaultState().settings.semester
+    });
   }
 });
