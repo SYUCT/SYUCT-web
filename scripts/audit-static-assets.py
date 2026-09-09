@@ -126,6 +126,9 @@ try:
         int(fallback_stats["stars"]), int(fallback_stats["forks"])
     ):
         FAILURES.append("index.html and assets/github-stats.json GitHub stats fallbacks differ")
+    html_stats_time = re.search(r'data-github-stats-updated-at="([^"]+)"', index_source)
+    if not html_stats_time or html_stats_time.group(1) != fallback_stats["updated_at"]:
+        FAILURES.append("index.html and assets/github-stats.json observation timestamps differ")
 except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
     FAILURES.append(f"invalid assets/github-stats.json: {error}")
 
