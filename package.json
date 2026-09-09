@@ -5,8 +5,9 @@
   "description": "Static campus guide with locally hosted PDF.js and local Office-to-PDF previews.",
   "scripts": {
     "vendor:pdfjs": "node scripts/vendor-pdfjs.mjs",
-    "test": "node tests/timetable-converter.test.js && node tests/timetable-ocr.test.js && node tests/timetable-graduate-pdf.test.js && node --test tests/timetable-mobile-text-parser.test.cjs tests/timetable-mobile-integration.test.cjs",
+    "test": "node tests/timetable-converter.test.js && node tests/timetable-ocr.test.js && node tests/timetable-graduate-pdf.test.js && node --test tests/timetable-mobile-text-parser.test.cjs tests/timetable-mobile-integration.test.cjs tests/github-live-stats.test.cjs",
     "test:browser": "node tests/timetable-page.browser.cjs",
+    "test:stats:browser": "node tests/github-live-stats.browser.cjs",
     "audit:static": "python3 scripts/audit-static-assets.py",
     "images:build": "python3 scripts/build-web-images.py",
     "community:test": "node scripts/update-community.mjs --self-test",

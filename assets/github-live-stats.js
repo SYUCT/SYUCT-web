@@ -4,12 +4,14 @@
   const API_URL = 'https://api.github.com/repos/SYUCT/SYUCT-web';
   const FALLBACK_URL = 'assets/github-stats.json';
   const CACHE_KEY = 'syuct:github-repo-stats:v3';
-  const CACHE_TTL_MS = 60 * 60 * 1000;
+  const REQUEST_TIMEOUT_MS = 8000;
+  const RETRY_INTERVAL_MS = 30000;
 
   const toCount = (value) => {
-    const number = Number(value);
-    return Number.isFinite(number) && number >= 0 ? Math.floor(number) : null;
+    return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0 ? value : null;
   };
+
+  const validTime = (value) => Number.isFinite(value) && value > 0 && value <= Date.now();
 
   const normalizeApiStats = (data) => {
     if (!data || typeof data !== 'object') return null;
@@ -23,8 +25,9 @@
     if (!data || typeof data !== 'object') return null;
     const stars = toCount(data.stars);
     const forks = toCount(data.forks);
-    if (stars === null || forks === null) return null;
-    return { stars, forks };
+    const fetchedAt = Date.parse(data.updated_at);
+    if (stars === null || forks === null || !validTime(fetchedAt)) return null;
+    return { stars, forks, fetchedAt };
   };
 
   const render = ({ stars, forks }) => {
@@ -48,7 +51,7 @@
       const stars = toCount(value.stars);
       const forks = toCount(value.forks);
       const fetchedAt = Number(value.fetchedAt);
-      if (stars === null || forks === null || !Number.isFinite(fetchedAt)) return null;
+      if (stars === null || forks === null || !validTime(fetchedAt)) return null;
       return { stars, forks, fetchedAt };
     } catch (_) {
       return null;
@@ -60,7 +63,7 @@
       localStorage.setItem(CACHE_KEY, JSON.stringify({
         stars: stats.stars,
         forks: stats.forks,
-        fetchedAt: Date.now()
+        fetchedAt: stats.fetchedAt
       }));
     } catch (_) {
       // localStorage 不可用时仍可正常显示本次实时结果。
@@ -68,46 +71,73 @@
   };
 
   const fetchJson = async (url, options) => {
-    const response = await fetch(url, options);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
+    const controller = new AbortController();
+    let timer;
+    try {
+      return await Promise.race([
+        (async () => {
+          const response = await fetch(url, { ...options, signal: controller.signal });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })(),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => { controller.abort(); reject(new Error('Stats request timed out')); }, REQUEST_TIMEOUT_MS);
+        })
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
   };
 
-  const loadFallback = async () => {
-    const data = await fetchJson(FALLBACK_URL, { cache: 'no-store' });
-    const stats = normalizeFallbackStats(data);
-    if (!stats) throw new Error('Invalid fallback stats');
-    render(stats);
-  };
-
-  const init = async () => {
+  const init = () => {
     const starNodes = document.querySelectorAll('[data-github-stars]');
     const forkNodes = document.querySelectorAll('[data-github-forks]');
     if (!starNodes.length && !forkNodes.length) return;
 
-    const cached = readCache();
-    if (cached) render(cached);
-
-    if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) return;
-
-    try {
-      const data = await fetchJson(API_URL, {
-        cache: 'no-store',
-        headers: { Accept: 'application/vnd.github+json' }
-      });
-      const stats = normalizeApiStats(data);
-      if (!stats) throw new Error('Invalid GitHub API response');
+    const snapshot = document.querySelector('[data-github-stats-updated-at]');
+    const htmlTime = Date.parse(snapshot && snapshot.getAttribute('data-github-stats-updated-at'));
+    let latestTime = validTime(htmlTime) ? htmlTime : 0;
+    // Compare observation times, not counts: real unstars must still be shown.
+    const accept = (stats) => {
+      if (!stats || stats.fetchedAt < latestTime) return;
+      latestTime = stats.fetchedAt;
       render(stats);
-      writeCache(stats);
-    } catch (_) {
-      if (!cached) {
+    };
+    accept(readCache());
+
+    let inFlight = false;
+    let lastAttempt = -Infinity;
+    const refresh = async () => {
+      if (inFlight || Date.now() - lastAttempt < RETRY_INTERVAL_MS) return;
+      inFlight = true;
+      lastAttempt = Date.now();
+      try {
+        const data = await fetchJson(API_URL, {
+          cache: 'no-store',
+          headers: { Accept: 'application/vnd.github+json' }
+        });
+        const stats = normalizeApiStats(data);
+        if (!stats) throw new Error('Invalid GitHub API response');
+        stats.fetchedAt = Date.now();
+        accept(stats);
+        writeCache(stats);
+      } catch (_) {
         try {
-          await loadFallback();
+          const data = await fetchJson(FALLBACK_URL, { cache: 'no-store' });
+          accept(normalizeFallbackStats(data));
         } catch (_) {
-          // API 和 fallback 都失败时保留 HTML 中现有数字。
+          // Keep the latest known snapshot; never replace it with an older one.
         }
+      } finally {
+        inFlight = false;
       }
-    }
+    };
+    // A cache speeds up first paint, but never suppresses revalidation on load.
+    refresh();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') refresh();
+    });
+    window.addEventListener('online', refresh);
   };
 
   if (document.readyState === 'loading') {
