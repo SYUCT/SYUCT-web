@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="沈阳化工大学课表本地转换工具：手机网页粘贴、研究生课表 PDF 和截图 OCR，核对后生成 SYUCT-TT2 课表码。">
+  <meta name="description" content="优先使用化大课表安卓 App 读取并导出课表码；网页支持本科粘贴、硕士 PDF 和截图 OCR，核对后生成 SYUCT-TT2 课表码。">
   <meta name="theme-color" content="#075ca8">
   <title>化大课表转换 · 沈阳化工大学校园指南（学生共创版）</title>
   <link href="assets/styles.css?rev=20260822" rel="stylesheet">
-  <link href="assets/timetable-converter.css?rev=20260908-tutorial1" rel="stylesheet">
+  <link href="assets/timetable-converter.css?rev=20260911-app-guide" rel="stylesheet">
   <link href="assets/favicon-32.png" rel="icon" type="image/png" sizes="32x32">
   <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 </head>
@@ -41,7 +41,14 @@
         <header class="article-header tt-hero">
           <div class="breadcrumb">首页 / 办事大厅 / 化大课表转换</div>
           <h1>化大课表转换</h1>
-          <p class="tt-hero-lead">本科粘贴课表，硕士上传 PDF。核对后生成课表码，返回小程序导入。</p>
+          <div class="tt-app-guide" aria-label="安卓 App 导出课表码">
+            <div>
+              <strong>优先使用 App · 仅支持安卓</strong>
+              <p>读取并核对课表后，在 App「设置」中复制课表码，返回小程序导入。</p>
+            </div>
+            <a class="tt-button tt-button-primary" href="downloads/SYUCT-Timetable.apk" download>下载安卓 App</a>
+          </div>
+          <p class="tt-hero-lead">使用网页：本科粘贴课表，硕士上传 PDF。核对后生成课表码。</p>
         </header>
 
         <section class="tt-section" id="recognize">

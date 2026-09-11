@@ -707,3 +707,9 @@ html[data-theme="dark"] .freshman-gate-visual::before{
 /* v1.35 — homepage action grouping */
 .hero-actions-home{align-items:flex-start;flex-direction:column}
 .hero-actions-secondary{display:flex;flex-wrap:wrap;gap:12px}
+/* 首页手机入口固定为两行两列；桌面保留原有主次布局。 */
+@media(max-width:650px){
+  .hero-actions-home{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:100%;align-items:stretch}
+  .hero-actions-home .hero-actions-secondary{display:contents}
+  .hero-actions-home .btn{width:100%;min-width:0;min-height:50px;padding:10px 6px;font-size:14px;line-height:1.4;text-align:center;border-radius:12px}
+}

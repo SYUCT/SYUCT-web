@@ -2,6 +2,14 @@
 .tt-hero{margin-bottom:14px}
 .tt-hero h1{margin-bottom:7px}
 .tt-hero-lead{max-width:760px;margin:0;color:var(--muted);line-height:1.65}
+.tt-app-guide{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0;padding:15px 16px;border:1px solid color-mix(in srgb,var(--primary) 28%,var(--border));border-radius:14px;background:color-mix(in srgb,var(--primary) 6%,var(--surface))}
+.tt-app-guide strong{color:var(--primary);font-size:15px}
+.tt-app-guide p{margin:5px 0 0;color:var(--muted);font-size:13px;line-height:1.65}
+.tt-app-guide .tt-button{flex-shrink:0;font-size:14px}
+@media(max-width:650px){
+  .tt-app-guide{align-items:stretch;flex-direction:column;gap:12px;padding:14px}
+  .tt-app-guide .tt-button{min-height:44px}
+}
 .tt-section{margin:18px 0;padding:22px;border:1px solid var(--border);border-radius:18px;background:var(--surface);box-shadow:0 12px 34px rgba(16,47,78,.06)}
 .tt-section-head{display:flex;align-items:flex-start;gap:11px;margin-bottom:14px}
 .tt-section-head h2{margin:0 0 3px;font-size:21px}
