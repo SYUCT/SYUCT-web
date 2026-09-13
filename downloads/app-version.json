@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 7,
-  "versionName": "0.2.5-alpha1",
+  "versionCode": 8,
+  "versionName": "0.2.6-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "717cddefe94d5945ca7ec99e3e30ca2bf116e8431c29d0fb27e1e5836542b3b8",
-  "notes": "修复桌面小组件校徽顶部被裁切的问题，保留放大后的尺寸。"
+  "sha256": "6bbc7d5af31013f7e73503cfa940336c5356cf14554c6f17acbc7cb7bc832b78",
+  "notes": "设置页新增小程序二维码，离线可查看。可将 App 课表码复制到小程序导入。"
 }
