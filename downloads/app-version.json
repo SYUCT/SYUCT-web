@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "applicationId": "top.syuct.timetable",
+  "versionCode": 6,
+  "versionName": "0.2.4-alpha1",
+  "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
+  "sha256": "ed26fe87bd76686a6d41de40c6b8dad4a594c1f64a44d4328c74fcb2d8a88772",
+  "notes": "设置页新增手动检测更新，不弹窗、不自动下载。小组件右上角校徽放大。"
+}
