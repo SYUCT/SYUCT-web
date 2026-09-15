@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 11,
-  "versionName": "0.2.9-alpha1",
+  "versionCode": 12,
+  "versionName": "0.2.10-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "68ab9b6f3284813aee3626fd811cb67afde4f618686404da95c6e4f494afab0e",
-  "notes": "课前通知换用校徽与蓝色强调色，缩短紧凑标题，展开后分行显示开课时间和地点。支持的系统提供开课时间短文本；岛的布局与最终配色由手机系统决定。实时倒计时仍为默认关闭的试验功能，不增加权限。"
+  "sha256": "eadc36eeb8d892207786e986b9714a55624af28ec065dae7eb3ff12a6a564239",
+  "notes": "新增可选准时提醒：在设置中主动开启，并允许系统的“闹钟和提醒”权限后使用精确定时。不添加时钟闹钟、不常驻后台；未授权保留普通提醒，可能延迟。提醒设置升级为蓝白卡片，预览使用下一门课的信息并明确标注演示时间。强行停止、关机或厂商限制仍可能影响送达。"
 }
