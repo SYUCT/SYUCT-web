@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 10,
-  "versionName": "0.2.8-alpha1",
+  "versionCode": 11,
+  "versionName": "0.2.9-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "0b275830a154ecc2838b36a090fd64868ac1dfd741cad961390ba743eb8af3e6",
-  "notes": "修复课前重开 App 可能漏提醒的问题，完善小组件添加反馈。新增课前实时倒计时试验，默认关闭；上岛效果尚未完成实测，不支持时保留普通通知。"
+  "sha256": "68ab9b6f3284813aee3626fd811cb67afde4f618686404da95c6e4f494afab0e",
+  "notes": "课前通知换用校徽与蓝色强调色，缩短紧凑标题，展开后分行显示开课时间和地点。支持的系统提供开课时间短文本；岛的布局与最终配色由手机系统决定。实时倒计时仍为默认关闭的试验功能，不增加权限。"
 }
