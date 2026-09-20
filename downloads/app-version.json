@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 12,
-  "versionName": "0.2.10-alpha1",
+  "versionCode": 13,
+  "versionName": "0.2.11-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "eadc36eeb8d892207786e986b9714a55624af28ec065dae7eb3ff12a6a564239",
-  "notes": "新增可选准时提醒：在设置中主动开启，并允许系统的“闹钟和提醒”权限后使用精确定时。不添加时钟闹钟、不常驻后台；未授权保留普通提醒，可能延迟。提醒设置升级为蓝白卡片，预览使用下一门课的信息并明确标注演示时间。强行停止、关机或厂商限制仍可能影响送达。"
+  "sha256": "79938ccb6a28cfd551faac83f735ab18f39498b82aa73f611f3717d19fe93d5e",
+  "notes": "小米超级岛新增左右分区：左侧彩色校徽与课程前三字，右侧开课时间；展开查看完整课程。去掉校徽反相处理，加入 vivo/iQOO 原子岛实验兼容，不增加权限或常驻后台。厂商模板实际显示与接入资格仍待真机确认，不支持时保留普通通知，通用小图标可能仍为单色。保留可选准时提醒；覆盖安装即可，请勿卸载旧版。"
 }
