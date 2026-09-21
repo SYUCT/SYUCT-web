@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 15,
-  "versionName": "0.2.13-alpha1",
+  "versionCode": 16,
+  "versionName": "0.2.14-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "a0edfc6c66452be765129005f65ccc280bb13786021a81f4fd454faee8ed0a7d",
-  "notes": "修复 0.2.12 小米预览回归，恢复通用实时倒计时，不再按焦点权限切换未验证模板。预览点击立即显示进度并核对系统接收结果，权限关闭或失败时明确提示，重复预览替换旧通知。保留课程简称＋时间、结束按钮与自动到时结束。澎湃 OS 3 真机岛样式、校徽颜色及文字裁切仍待确认。不新增权限或常驻服务；请覆盖安装，不要卸载旧版。"
+  "sha256": "6860baf51dd1b1c69294babf85d77a01fa263abd36ed14d0bc1878bb7de5d13b",
+  "notes": "岛内改用系统剩余倒计时，不再显示课程名或开课时刻；不接入小米 App ID。正式提醒仍提前15分钟，预览也改为15分钟，到开课时间结束；晚触发只显示实际剩余时间。展开显示完整课程名、开课时间、授课教师与教室，缺失信息明确标注。不新增权限或常驻服务。是否上岛及显示分秒还是分钟仍由手机系统决定，澎湃 OS 3 真机显示待确认。请覆盖安装，不要卸载旧版。"
 }
