@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 13,
-  "versionName": "0.2.11-alpha1",
+  "versionCode": 14,
+  "versionName": "0.2.12-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "79938ccb6a28cfd551faac83f735ab18f39498b82aa73f611f3717d19fe93d5e",
-  "notes": "小米超级岛新增左右分区：左侧彩色校徽与课程前三字，右侧开课时间；展开查看完整课程。去掉校徽反相处理，加入 vivo/iQOO 原子岛实验兼容，不增加权限或常驻后台。厂商模板实际显示与接入资格仍待真机确认，不支持时保留普通通知，通用小图标可能仍为单色。保留可选准时提醒；覆盖安装即可，请勿卸载旧版。"
+  "sha256": "62d7151f23300f0a1f54a89abf7139dc433b528cfb80fddbc5a3298365760cc2",
+  "notes": "小米通用岛改为课程简称＋开课时间；自动检查焦点通知权限，分开专用模板与通用通知。小图标改传原始彩色校徽并尝试原色兼容，不再使用生成的单色蒙版。澎湃 OS 3 实际图标染色、文字裁切和专用模板显示仍待真机确认，不保证所有机型效果一致。不新增权限或常驻服务；保留准时提醒及自动结束。请覆盖安装，不要卸载旧版。"
 }
