@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 14,
-  "versionName": "0.2.12-alpha1",
+  "versionCode": 15,
+  "versionName": "0.2.13-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "62d7151f23300f0a1f54a89abf7139dc433b528cfb80fddbc5a3298365760cc2",
-  "notes": "小米通用岛改为课程简称＋开课时间；自动检查焦点通知权限，分开专用模板与通用通知。小图标改传原始彩色校徽并尝试原色兼容，不再使用生成的单色蒙版。澎湃 OS 3 实际图标染色、文字裁切和专用模板显示仍待真机确认，不保证所有机型效果一致。不新增权限或常驻服务；保留准时提醒及自动结束。请覆盖安装，不要卸载旧版。"
+  "sha256": "a0edfc6c66452be765129005f65ccc280bb13786021a81f4fd454faee8ed0a7d",
+  "notes": "修复 0.2.12 小米预览回归，恢复通用实时倒计时，不再按焦点权限切换未验证模板。预览点击立即显示进度并核对系统接收结果，权限关闭或失败时明确提示，重复预览替换旧通知。保留课程简称＋时间、结束按钮与自动到时结束。澎湃 OS 3 真机岛样式、校徽颜色及文字裁切仍待确认。不新增权限或常驻服务；请覆盖安装，不要卸载旧版。"
 }
