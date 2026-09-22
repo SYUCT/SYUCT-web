@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 16,
-  "versionName": "0.2.14-alpha1",
+  "versionCode": 17,
+  "versionName": "0.2.15-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "6860baf51dd1b1c69294babf85d77a01fa263abd36ed14d0bc1878bb7de5d13b",
-  "notes": "岛内改用系统剩余倒计时，不再显示课程名或开课时刻；不接入小米 App ID。正式提醒仍提前15分钟，预览也改为15分钟，到开课时间结束；晚触发只显示实际剩余时间。展开显示完整课程名、开课时间、授课教师与教室，缺失信息明确标注。不新增权限或常驻服务。是否上岛及显示分秒还是分钟仍由手机系统决定，澎湃 OS 3 真机显示待确认。请覆盖安装，不要卸载旧版。"
+  "sha256": "924bf7dfb49910c9a9f2e0b6455fd5e34154d5c6bac1b34d5b5b5211ded9d33b",
+  "notes": "修复闹钟和提醒权限按钮消失：入口固定显示，已授权也可查看，不自动开启提醒。小米岛改用剩余分钟数，展开保留课程、时间、教师和教室；省电时分钟更新可能延迟，实际岛样式仍由系统决定。精简废弃厂商模板和无用代码，不新增权限、App ID或常驻服务，正式提醒调度与课表数据规则不变。请覆盖安装，不要卸载旧版。"
 }
