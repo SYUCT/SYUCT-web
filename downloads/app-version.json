@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 17,
-  "versionName": "0.2.15-alpha1",
+  "versionCode": 18,
+  "versionName": "0.2.16-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "924bf7dfb49910c9a9f2e0b6455fd5e34154d5c6bac1b34d5b5b5211ded9d33b",
-  "notes": "修复闹钟和提醒权限按钮消失：入口固定显示，已授权也可查看，不自动开启提醒。小米岛改用剩余分钟数，展开保留课程、时间、教师和教室；省电时分钟更新可能延迟，实际岛样式仍由系统决定。精简废弃厂商模板和无用代码，不新增权限、App ID或常驻服务，正式提醒调度与课表数据规则不变。请覆盖安装，不要卸载旧版。"
+  "sha256": "7ca4c9cc39a4267d87d0210d9c431d7203a70458ba8f7cf285909aff4b9a3f86",
+  "notes": "岛内短文本改为课程名前四字，不再显示剩余分钟数。卡片摘要缩短，点击通知或查看详情可分项查看完整课程、开课时间、教师和教室，长内容支持换行滚动。移除分钟刷新，保留课前15分钟提醒、卡片系统计时和上课时结束。闹钟和提醒权限入口保持可见，不新增权限、App ID或常驻服务。岛宽度和系统浮窗样式仍由手机系统决定。请覆盖安装，不要卸载旧版。"
 }
