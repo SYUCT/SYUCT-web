@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 18,
-  "versionName": "0.2.16-alpha1",
+  "versionCode": 19,
+  "versionName": "0.2.17-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "7ca4c9cc39a4267d87d0210d9c431d7203a70458ba8f7cf285909aff4b9a3f86",
-  "notes": "岛内短文本改为课程名前四字，不再显示剩余分钟数。卡片摘要缩短，点击通知或查看详情可分项查看完整课程、开课时间、教师和教室，长内容支持换行滚动。移除分钟刷新，保留课前15分钟提醒、卡片系统计时和上课时结束。闹钟和提醒权限入口保持可见，不新增权限、App ID或常驻服务。岛宽度和系统浮窗样式仍由手机系统决定。请覆盖安装，不要卸载旧版。"
+  "sha256": "1a63172636ff18b938e7b05e19746f05aa0618e3eda42ea3d9ef81307aa0092f",
+  "notes": "通知摘要直接显示开课时间与教室位置，不再显示“点查看详情”。教室尚未填写时显示“教室未提供”；预览和正式提醒一致。岛内保留课程名前四字，详情按钮仍可查看完整课程信息。请覆盖安装，不要卸载旧版。"
 }
