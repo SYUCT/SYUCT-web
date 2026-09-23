@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 20,
-  "versionName": "0.2.18-alpha1",
+  "versionCode": 21,
+  "versionName": "0.2.19-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "d1f48a0ad8856680cec3a3f87f8d114c5a271dcf7777906c5d10bc2d23b4efb2",
-  "notes": "普通通知恢复完整课程名，摘要显示开课时间、教师和教室；岛短文本独立使用课程名前四字，展开内容优先显示教学楼。无新增权限。请覆盖安装，不要卸载旧版。"
+  "sha256": "15a6cf667f68397baef4aa3eb0f0d59ad2f23af9f91e1ebcf2ece625638aa7ce",
+  "notes": "修复上课提醒排版：普通通知按时间、教师、地点分行，岛展开详情优先显示地点，时间与教师也分行，不再用分隔点拼接。无新增权限，请覆盖安装。"
 }
