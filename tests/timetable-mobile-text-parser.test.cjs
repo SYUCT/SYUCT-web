@@ -108,6 +108,22 @@ test("parity, rather than source-range endpoint, determines explicit weeks", () 
   assert.deepEqual(ok(sample({weeks:"第1-16周|单周"})).courses[0].weeks, [1,3,5,7,9,11,13,15]);
   assert.deepEqual(ok(sample({weeks:"第1-13周|双周"})).courses[0].weeks, [2,4,6,8,10,12]);
 });
+test("campus direct odd/even suffix without a separator keeps exact weeks", () => {
+  assert.deepEqual(ok(sample({weeks:"第2-16周双周"})).courses[0].weeks, [2,4,6,8,10,12,14,16]);
+  assert.deepEqual(ok(sample({weeks:"第1-16周单周"})).courses[0].weeks, [1,3,5,7,9,11,13,15]);
+  blocked(sample({weeks:"第2-16周单双周"}),"INVALID_SCHEDULE");
+  blocked(sample({weeks:"第2-16周双"}),"INVALID_SCHEDULE");
+});
+test("encoded clipboard spaces and duplicate full table still retain all courses", () => {
+  const copied=fixture("qq-duplicated.anonymized.txt")
+    .replace("\n\n","\n&#x20;\n\n")
+    .replaceAll("第2-10周|双周","第2-16周双周");
+  const r=ok(copied);
+  assert.equal(r.courses.length,20);
+  assert.equal(r.stats.scheduleMarkers,40);
+  assert.equal(r.stats.duplicateRecords,20);
+  assert.deepEqual(r.courses.find(c=>c.name==="电工学"&&c.weekday===1).weeks,[2,4,6,8,10,12,14,16]);
+});
 test("single week and disjoint week intervals", () => {
   assert.deepEqual(ok(sample({weeks:"第6周"})).courses[0].weeks, [6]);
   assert.deepEqual(ok(sample({weeks:"第1-3,5,7-8周"})).courses[0].weeks, [1,2,3,5,7,8]);

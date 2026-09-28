@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 22,
-  "versionName": "0.2.20-alpha1",
+  "versionCode": 23,
+  "versionName": "0.2.21-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "9f8a273d4462aed1786b2dad85b591f531e150a126402f47dd9908148da09c21",
-  "notes": "普通通知优先显示教室，再显示开课时间和教师，避免收起时教室被藏住。无新增权限，请覆盖安装。"
+  "sha256": "9ffacffac13c2bc70bad16ea6e35f161a322685c6233460db7ded0e17da2f145",
+  "notes": "修复本科课表直写单双周格式（如第2-16周双周）及复制文本中的编码空格；仍需在导入核对页逐门检查。无新增权限，请覆盖安装。"
 }

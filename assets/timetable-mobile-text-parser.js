@@ -16,7 +16,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  const VERSION = "1.0.1";
+  const VERSION = "1.0.2";
   const DAY = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 7, 天: 7 };
   const MAX_INPUT = 1000000;
   const MAX_MARKERS = 2000;
@@ -71,6 +71,7 @@
   function normalizeInput(text) {
     // Preserve newlines and tabs; they are useful boundaries, not cosmetic noise.
     return text.replace(/\r\n?/g, "\n")
+      .replace(/(?:&#(?:x0*20|0*32|x0*a0|0*160);|&nbsp;)/gi, " ")
       .replace(/[\u00a0\u202f\u3000]/g, " ")
       .replace(/[\u200b\u200c\u200d\ufeff]/g, "");
   }
@@ -134,9 +135,13 @@
     if (!m) return { start, end: start + raw.length, error: "无法识别星期、节次或花括号内的周次。" };
     try {
       const periods = numericSet(m[2], opts.maxPeriod, "节次");
-      const wm = /^(.*?)\s*周(?:\s*(?:\|\s*|\(\s*)(单周|双周|全周|每周)\s*\)?)?$/.exec(m[3].trim());
+      // The campus page emits both “第2-16周|双周” and “第2-16周双周”.
+      // Require an explicit, complete parity token so the final “周” cannot
+      // be mistaken for the end of the numeric range.
+      const wm = /^(.*?)\s*周(?:\s*(?:\|\s*(单周|双周|全周|每周)|\(\s*(单周|双周|全周|每周)\s*\)|(单周|双周|全周|每周)))?$/.exec(m[3].trim());
       if (!wm) throw new Error("无法识别周次或单双周标记。");
-      const mode = wm[2] === "单周" ? "odd" : wm[2] === "双周" ? "even" : "all";
+      const parity = wm[2] || wm[3] || wm[4];
+      const mode = parity === "单周" ? "odd" : parity === "双周" ? "even" : "all";
       let weeks = numericSet(wm[1], opts.maxWeek, "周次");
       weeks = weeks.filter(n => mode === "all" || n % 2 === (mode === "odd" ? 1 : 0));
       if (!weeks.length) throw new Error("周次范围与单双周条件没有交集。");

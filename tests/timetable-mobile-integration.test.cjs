@@ -31,6 +31,17 @@ test('discrete sections and weeks survive adapter and codec without expansion', 
   assert.deepEqual(expand(codec.decodeShareCode(codec.encodeShareCode({ courses: r.courses, settings })).courses), expand(r.courses));
   assert.ok(r.diagnostics.some((d) => d.code === 'EXACT_RANGES_SPLIT'));
 });
+test('direct even-week suffix survives actual import and TT2 export', () => {
+  const text=fixture('qq-duplicated.anonymized.txt')
+    .replace('\n\n','\n&#x20;\n\n')
+    .replaceAll('第2-10周|双周','第2-16周双周');
+  const parsed=parser.parseCampusTimetable(text);
+  assert.equal(parsed.courses.length,20);
+  const physics=parsed.courses.find(c=>c.name==='电工学'&&c.weekday===1);
+  assert.deepEqual([physics.startWeek,physics.endWeek,physics.weekType],[2,16,'even']);
+  const decoded=codec.decodeShareCode(codec.encodeShareCode({courses:parsed.courses,settings}));
+  assert.deepEqual(expand(decoded.courses),expand(parsed.courses));
+});
 test('100 varying discrete sets preserve exact time occupancy through protocol', () => {
   for (let i = 0; i < 100; i++) {
     const periods = Array.from({ length: 12 }, (_, p) => p + 1).filter((p) => (p + i) % 3 !== 0);
@@ -106,7 +117,8 @@ test('weekday-grouped Markdown remains explicitly unsupported', () => {
 test('resource load order, revisions and page-specific cache policy', () => {
   const html = fs.readFileSync(path.join(__dirname, '../timetable-converter.html'), 'utf8');
   const names = ['timetable-mobile-text-parser.js', 'timetable-campus-parser.js', 'timetable-converter.js'];
-  const positions = names.map((n) => html.indexOf(`assets/${n}?rev=${n === 'timetable-converter.js' ? '20260908-optional1' : '20260908-paste2'}`));
+  const revs={'timetable-mobile-text-parser.js':'20260928-weeks1','timetable-campus-parser.js':'20260908-paste2','timetable-converter.js':'20260908-optional1'};
+  const positions = names.map((n) => html.indexOf(`assets/${n}?rev=${revs[n]}`));
   assert.ok(positions.every((p) => p > 0));
   assert.ok(positions[0] < positions[1] && positions[1] < positions[2]);
   const config = require('../edgeone.json');
