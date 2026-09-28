@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 23,
-  "versionName": "0.2.21-alpha1",
+  "versionCode": 24,
+  "versionName": "0.2.22-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "9ffacffac13c2bc70bad16ea6e35f161a322685c6233460db7ded0e17da2f145",
-  "notes": "修复本科课表直写单双周格式（如第2-16周双周）及复制文本中的编码空格；仍需在导入核对页逐门检查。无新增权限，请覆盖安装。"
+  "sha256": "8bbe1d2ab4e8721304629980cd27f201629f674fe4fc8db8320df7fe91ef23d7",
+  "notes": "新增课程自选不连续周次、按具体日期调课，课表、小组件和课前提醒同步；完整备份包含调课记录。无新增权限，请覆盖安装。"
 }
