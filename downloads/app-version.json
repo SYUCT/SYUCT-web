@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "applicationId": "top.syuct.timetable",
-  "versionCode": 25,
-  "versionName": "0.2.23-alpha1",
+  "versionCode": 26,
+  "versionName": "0.2.24-alpha1",
   "apkUrl": "https://www.syuct.top/downloads/SYUCT-Timetable.apk",
-  "sha256": "6fabf692b2d1225c6f2c3ef2e4f192e81a26819f469d74a362614951ab1ea9f6",
-  "notes": "2026 年已公布的全国统一公休日自动停课，小组件与课前提醒同步；公休日和手动调课迁出分别标记。学校延长假期需手动调整。无新增权限，请覆盖安装。"
+  "sha256": "49a14ab7394d2bb85d185d91a920480214352effe0a3d56b8e6edb9b1a2836bb",
+  "notes": "修复小组件或实时通知异常连带中断普通提醒、旧凭证导致丢失预约不恢复的问题。设置新增最近后台触发和通知提交记录。无新增权限或常驻服务；卓易通后台准时性仍需实测，未接入华为原生实况窗。请直接覆盖安装。"
 }
