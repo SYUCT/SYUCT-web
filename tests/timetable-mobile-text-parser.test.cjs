@@ -124,6 +124,17 @@ test("encoded clipboard spaces and duplicate full table still retain all courses
   assert.equal(r.stats.duplicateRecords,20);
   assert.deepEqual(r.courses.find(c=>c.name==="电工学"&&c.weekday===1).weeks,[2,4,6,8,10,12,14,16]);
 });
+
+test("semicolon-separated weeks and periods preserve exact membership", () => {
+  for (const separator of [";", "；"]) {
+    assert.deepEqual(ok(sample({weeks:`第13${separator}14周`})).courses[0].weeks, [13,14]);
+    assert.deepEqual(ok(sample({weeks:`第13-14${separator}17-18周`})).courses[0].weeks, [13,14,17,18]);
+    assert.deepEqual(ok(sample({weeks:`第1-4${separator}7-10周|单周`})).courses[0].weeks, [1,3,7,9]);
+    assert.deepEqual(ok(sample({periods:`1${separator}3`})).courses[0].periods, [1,3]);
+  }
+  for (const weeks of ["第13;周", "第;14周", "第13;;14周", "第14-13;16周"])
+    blocked(sample({weeks}), "INVALID_SCHEDULE");
+});
 test("single week and disjoint week intervals", () => {
   assert.deepEqual(ok(sample({weeks:"第6周"})).courses[0].weeks, [6]);
   assert.deepEqual(ok(sample({weeks:"第1-3,5,7-8周"})).courses[0].weeks, [1,2,3,5,7,8]);
@@ -222,7 +233,7 @@ for (const changes of [
   {periods:"0,1"},{periods:"25,26"},{periods:"4-2"},
   {periods:"1,x"},{weeks:"第0-4周"},{weeks:"第1-54周"},
   {weeks:"第8-2周"},{weeks:"第2周|单周"},{weeks:"第1-5周|单双周"},
-  {weeks:"第1;3周"},{weeks:"第1-5周|未知"}
+  {weeks:"第1;;3周"},{weeks:"第1-5周|未知"}
 ]) {
   test("invalid time blocks: " + JSON.stringify(changes), () => blocked(sample(changes),"INVALID_SCHEDULE"));
 }

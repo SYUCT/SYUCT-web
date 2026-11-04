@@ -16,7 +16,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  const VERSION = "1.0.2";
+  const VERSION = "1.0.3";
   const DAY = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 7, 天: 7 };
   const MAX_INPUT = 1000000;
   const MAX_MARKERS = 2000;
@@ -111,7 +111,7 @@
   }
 
   function numericSet(expression, max, label) {
-    const expr = expression.normalize("NFKC").replace(/[、，]/g, ",").trim();
+    const expr = expression.normalize("NFKC").replace(/[、，;；]/g, ",").trim();
     if (!expr || expr.length > 160) throw new Error(label + "列表为空或过长。");
     const values = new Set();
     for (const part of expr.split(",")) {
@@ -131,7 +131,7 @@
     if (closing < 0) return { start, end: start, error: "时间说明缺少完整的右花括号。" };
     const raw = chunk.slice(0, closing + 1);
     const token = raw.normalize("NFKC");
-    const m = /^(?:周|星期)\s*([一二三四五六日天])\s*第\s*([0-9,\s、~～–—-]+)\s*节\s*\{\s*(.+?)\s*\}$/s.exec(token);
+    const m = /^(?:周|星期)\s*([一二三四五六日天])\s*第\s*([0-9,;\s、~～–—-]+)\s*节\s*\{\s*(.+?)\s*\}$/s.exec(token);
     if (!m) return { start, end: start + raw.length, error: "无法识别星期、节次或花括号内的周次。" };
     try {
       const periods = numericSet(m[2], opts.maxPeriod, "节次");

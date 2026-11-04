@@ -31,6 +31,14 @@ test('discrete sections and weeks survive adapter and codec without expansion', 
   assert.deepEqual(expand(codec.decodeShareCode(codec.encodeShareCode({ courses: r.courses, settings })).courses), expand(r.courses));
   assert.ok(r.diagnostics.some((d) => d.code === 'EXACT_RANGES_SPLIT'));
 });
+
+test('semicolon-separated weeks survive the website adapter and TT2 without filling gaps', () => {
+  const text=mobile('分号课程','周一第1;3节{第13-14；17-18周}');
+  const parsed=parser.parseCampusTimetable(text);
+  const expected=expandExpected([{name:'分号课程',teacher:'教师甲',location:'通明楼138',weekday:1,periods:[1,3],weeks:[13,14,17,18]}]);
+  assert.deepEqual(expand(parsed.courses),expected);
+  assert.deepEqual(expand(codec.decodeShareCode(codec.encodeShareCode({courses:parsed.courses,settings})).courses),expected);
+});
 test('direct even-week suffix survives actual import and TT2 export', () => {
   const text=fixture('qq-duplicated.anonymized.txt')
     .replace('\n\n','\n&#x20;\n\n')
@@ -117,7 +125,7 @@ test('weekday-grouped Markdown remains explicitly unsupported', () => {
 test('resource load order, revisions and page-specific cache policy', () => {
   const html = fs.readFileSync(path.join(__dirname, '../timetable-converter.html'), 'utf8');
   const names = ['timetable-mobile-text-parser.js', 'timetable-campus-parser.js', 'timetable-converter.js'];
-  const revs={'timetable-mobile-text-parser.js':'20260928-weeks1','timetable-campus-parser.js':'20260908-paste2','timetable-converter.js':'20260908-optional1'};
+  const revs={'timetable-mobile-text-parser.js':'20261104-weeks2','timetable-campus-parser.js':'20260908-paste2','timetable-converter.js':'20260908-optional1'};
   const positions = names.map((n) => html.indexOf(`assets/${n}?rev=${revs[n]}`));
   assert.ok(positions.every((p) => p > 0));
   assert.ok(positions[0] < positions[1] && positions[1] < positions[2]);
